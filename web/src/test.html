@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>routerMaker</title>
+    <script src="libs/js/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?v=3.26&language=en&libraries=places"></script> 
+    <script type="text/javascript" src="libs/js/markerclusterer.js"></script> 
+<style>
+    *{margin: 0 auto; padding: 0}
+    #google_map{width: 1000px; height: 600px; border: 1px solid #777}
+    #inp{
+        position: absolute;
+
+    }
+</style>
+</head>
+<body>
+    <button id="btn">获取并刷新</button>
+    <button id="btn1">移除标记</button>
+
+    <input type="text" value="搜索" id="inp">
+    <div id="google_map">
+        
+    </div>
+
+<script>
+    var styles = [{
+        url: './libs/images/heart30.png',
+        height: 26,
+        width: 30,
+        anchor: [4, 0],
+        textColor: '#ff00ff',
+        textSize: 10
+      }, {
+        url: './libs/images/heart40.png',
+        height: 35,
+        width: 40,
+        anchor: [8, 0],
+        textColor: '#ff0000',
+        textSize: 11
+      }, {
+        url: './libs/images/heart50.png',
+        width: 50,
+        height: 44,
+        anchor: [12, 0],
+        textSize: 12
+      }]
+
+    var uluru = {lat: -25.363, lng: 131.044};
+    var map = new google.maps.Map(document.getElementById('google_map'), {
+        zoom: 6,
+        center: uluru,
+        disableDoubleClickZoom: true,  //禁用双击放大功能
+        styles: [{
+            featureType: 'poi',  //停用了景点
+            stylers: [{ visibility: 'off' }]  // Turn off points of interest.
+        },{
+            featureType: 'transit.station',  //停用了中转站
+            stylers: [{ visibility: 'off' }]  // Turn off bus stations, train stations, etc.
+        }],
+        streetViewControl: true,
+        rotateControl: true,
+        scaleControl: true
+    });
+    var transitLayer = new google.maps.TransitLayer();
+    transitLayer.setMap(map);
+    //多线段
+    var flightPlanCoordinates = [
+        {lat: 37.772, lng: -122.214},
+        {lat: 21.291, lng: -157.821},
+        {lat: -18.142, lng: 178.431},
+        {lat: -27.467, lng: 153.027}
+    ];
+    new google.maps.Polyline({
+        path:flightPlanCoordinates,
+        map:map,
+        icons:[{
+            icon:{
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                strokeColor:'#FFFF00'
+            },
+            offset:'50%'
+        }],
+        strokeColor: '#00FF00',
+        strokeOpacity: 0.2,
+    });
+    //多边形
+    var flightPath = new google.maps.Polygon({
+        path: flightPlanCoordinates,
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.5,
+        strokeWeight: 2,
+        fillColor:'#0000FF',
+        fillOpacity:0.2,
+        draggable:true,  //可拖动
+        editable:true,   //可编辑
+        
+    });
+    
+    flightPath.setMap(map);
+    //带孔的路径
+    var outerCoords = [
+        {lat: 25.774, lng: -80.190},
+        {lat: 18.466, lng: -66.118},
+        {lat: 32.321, lng: -64.757}
+    ];
+    var innerCoords = [
+        {lat: 28.745, lng: -70.579},
+        {lat: 29.570, lng: -67.514},
+        {lat: 27.339, lng: -66.668}
+    ];
+    var bermudaTriangle = new google.maps.Polygon({
+        paths: [outerCoords, innerCoords],
+        strokeColor: '#FFC107',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#FFC107',
+        fillOpacity: 0.35
+    });
+    bermudaTriangle.setMap(map);
+
+    var bounds = {
+        north: 44.599,
+        south: 44.490,
+        east: -78.443,
+        west: -78.649
+    };
+    var historicalOverlay = new google.maps.GroundOverlay(
+        'https://www.lib.utexas.edu/maps/historical/newark_nj_1922.jpg',
+        bounds
+    );
+    historicalOverlay.setMap(map);
+    // 矩形
+    rectangle = new google.maps.Rectangle({
+        map:map,
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#FF0000',
+        fillOpacity: 0.35,
+        bounds: bounds,
+        editable: true,
+        draggable: true
+    });
+
+    rectangle.setMap(map);
+
+    var infoWindow = new google.maps.InfoWindow;
+    var markers = [];
+    var marker = new google.maps.Marker({  //创建带标记的地图
+        position: uluru,
+        map: map,
+        label:'A',
+        icon:'./libs/images/people45.png',
+        title:'我是标题！',
+        animation:google.maps.Animation.DROP,  //创建动态标记
+        //zIndex:2,
+        draggable:true
+    });
+    position={
+        lat:10,
+        lng:20
+    }
+    marker.addListener('click', function() {
+        //点击标记后，为每个标记添加说明
+        information="<b style='color:red'>肯德基</b>快餐店"
+        infoWindow.setContent(information);
+        infoWindow.open(map, marker);
+        //同时设置动画标记
+        marker.setAnimation(google.maps.Animation.BOUNCE);
+        console.log(marker.getIcon())
+        marker.setIcon('./libs/images/m2.png')
+        //获取 多线段路径
+        console.log(flightPath.getPath())
+    })
+    markers.push(marker)
+    var markerClusterer = new MarkerClusterer(map, markers, {
+        imagePath: './libs/images/m'
+    });
+    
+
+    //点击按钮
+    $('#btn1').click(function(){
+        marker.setMap(null)
+    })
+    $('#btn').click(function(){
+        var marker1 =new google.maps.Marker({
+            position: {lat: -25.363, lng: 131.043},
+            map: map,
+        });
+        var marker2 =new google.maps.Marker({
+            position: {lat: -25.363, lng: 132.043},
+            map: map,
+        });
+        markers.push(marker1,marker2)
+        
+        
+        //清除所有的标记
+        //markerClusterer.clearMarkers();
+        if(markerClusterer){  //相当于刷新了标记聚类
+            markerClusterer.clearMarkers();
+            markerClusterer = new MarkerClusterer(map, markers, {
+                imagePath: './libs/images/m',
+                //maxZoom:20,  #最大放大
+                //gridSize: size, 
+                styles:styles
+
+            });
+        }
+        map.setMapTypeId('satellite')
+        map.setTilt(45);
+    })
+
+    map.addListener('click', function(e) {  //监听地图的点击事件
+        var data={}
+        data.lat = e.latLng.lat();  //地图点击点的纬度
+        data.lng = e.latLng.lng();  //经度
+        console.log(data)
+    });
+    map.addListener('bounds_changed', function(e){
+        console.log(rectangle)
+    })
+
+
+    //地理定位
+    var infoWindow = new google.maps.InfoWindow;
+     // Try HTML5 geolocation.
+     if (navigator.geolocation) {
+        console.log('可以获取定位啊')
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var place =map.getCenter()  //获取位置
+            var pos = {
+                //lat: position.coords.latitude,
+                //lng: position.coords.longitude
+                lat :place.lat()+2,
+                lng :place.lng()+3
+            };
+
+            infoWindow.setPosition(pos);
+            infoWindow.setContent('Location found.');
+            map.setCenter(pos);
+        }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+        });
+    } else {
+        console.log("Browser doesn't support Geolocation")
+        handleLocationError(false, infoWindow, map.getCenter());
+    }
+    function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+        infoWindow.setPosition(pos);
+        infoWindow.setContent(browserHasGeolocation ?
+            'Error: The Geolocation service failed.' :
+            'Error: Your browser doesn\'t support geolocation.');
+    }
+
+    setTimeout(function(){
+        var place =map.getCenter()  //获取位置
+        var pos= {
+            lat :place.lat(),
+            lng :place.lng()
+        } 
+        console.log(pos)
+        pos.lat = pos.lat +2
+        pos.lng = pos.lng +2
+        map.setCenter(pos);  //设置中心点
+        console.log(pos)
+        //做个标记
+        new google.maps.Marker({
+            position: {lat: pos.lat, lng: pos.lng},
+            map: map,
+        });
+    },20000)
+
+    
+   
+</script>
+
+</body>
+</html>
