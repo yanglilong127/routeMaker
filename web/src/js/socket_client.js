@@ -21,6 +21,13 @@ function client_socket(sz,username,callback){
         }
     });
     //callback();
+    
+    //用户在线人数
+    socket.on('online_num',(nums)=>{
+        //console.log(nums);
+        $('#navigation .banben span.online_num').text(nums);
+    });
+    
 }
 
 

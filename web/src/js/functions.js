@@ -51,15 +51,22 @@ function num2double(number){
     number=(number.toString().length==2) ? number : ('0'+number);
     return number;
 }
+
 //将标准时间转换格式 2017/07/27 08:20:08
-function forMatDate(date){  //中国标准时间对象
+//参数2是默认导出格式
+function forMatDate(date,default_val=true){  //中国标准时间对象
     var year=date.getFullYear();
     var month=num2double(date.getMonth()+1);
     var dat=num2double(date.getDate());
     var hours=num2double(date.getHours());
     var min=num2double(date.getMinutes());
     var sen=num2double(date.getSeconds());
-    date=year+'/'+month+'/'+dat+' '+hours+':'+min+':'+sen;
+    if(default_val){
+        date=year+'/'+month+'/'+dat+' '+hours+':'+min+':'+sen;
+    }else{
+        date=year+month+dat+hours+min+sen;
+    }
+    
     return date;
 }
 
@@ -85,6 +92,7 @@ function getDistance(latLng_start,latLng_end){
 } 
 
 
+
 /**
  * 检查站点的唯一性
  * **/
@@ -94,15 +102,18 @@ function check_station(latLng){
     var latLng_sum = lat + lng;
     for(var i=0; i<window.company_markers.length; i++){
         var tmp_latLng=window.company_markers[i].getPosition();
-        var tmp_lat = tmp_latLng.lat();
-        var tmp_lng = tmp_latLng.lng();
+        var tmp_lat = parseInt(tmp_latLng.lat()*1000000)/1000000;
+        var tmp_lng = parseInt(tmp_latLng.lng()*1000000)/1000000;
         var tmp_latLng_sum = tmp_lat + tmp_lng;
         if(latLng_sum === tmp_latLng_sum || (lat===tmp_lat && lng===tmp_lng) ){
             latLng.lat += 0.000001;
             check_station(latLng);
         }
     }
-
+    latLng = {
+        lat: parseInt(latLng.lat*1000000)/1000000,
+        lng: parseInt(latLng.lng*1000000)/1000000,
+    }
     return latLng;
 }
 
@@ -163,6 +174,30 @@ function check_marker_area(latLng,the_markers,except_itself,area=100){
         }
     }
     return true;
+};
+
+//html字符串转换为 HTML 实体
+function htmlspecialchars(str) {        
+    var s = "";  
+    if (str.length == 0) 
+        return "";  
+    for(var i=0; i<str.length; i++)  
+    {  
+        switch(str.substr(i,1))  
+        {  
+            case "\"": s += "&quot;"; break; 
+            case "\'": s += "&apos;"; break;
+            default: s += str.substr(i,1); break;  
+        }  
+    }  
+    return s;  
+}
+
+//HTML实体 转换为 html字符串
+function htmlspecialchars_decode(str){ 
+    str = str.replace(/&quot;/g, "\"");  
+    str = str.replace(/&apos;/g, "\'"); 
+    return str;  
 }
 
 module.exports={
@@ -171,5 +206,7 @@ module.exports={
     byte2,
     forMatDate,
     getDistance,
-    cal_station_id
+    cal_station_id,
+    htmlspecialchars,
+    htmlspecialchars_decode
 }

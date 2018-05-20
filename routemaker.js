@@ -76,7 +76,7 @@ setInterval(sessionCleanup, 1800000);
 //输出什么东西
 app.set('view engine','html');
 //模版文件放在哪儿
-app.set('views','./web/dist/myroute/html');
+app.set('views','./web/dist/html');
 //哪种模版引擎
 app.engine('html',consolidate.ejs);
 
@@ -88,7 +88,7 @@ my_router.myrouter(app);
 app.use(express.static('./web/dist'));
 
 
-
+//console.log(io.eio.clientsCount); 在线用户人数
 // 检查用户是否已经在线
 // io.sockets.sockets 返回所有在线的socket对象集合
 var checkOnline = function(sz, username){
@@ -110,12 +110,14 @@ io.on('connection',(socket)=>{
         if(checkOnline(sz, username)){  //用户在线
             //console.log('用户已在线')
             socket.emit('isExist',true);
+            socket.emit('online_num',io.eio.clientsCount);
         }else{
             //console.log('登录成功')
             //socket.id唯一
             socket.sz=sz;
             socket.username=username;
             socket.emit('isExist',false);
+            socket.emit('online_num',io.eio.clientsCount);
         }
     });
     

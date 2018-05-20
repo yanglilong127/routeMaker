@@ -14,6 +14,7 @@ module.exports={
 		index:path.join(__dirname,'web/src/js/index.js'),
 		routemaker:path.join(__dirname,'web/src/js/routemaker.js'),
 		routedrive:path.join(__dirname,'web/src/js/routedrive.js'),
+		companyStation:path.join(__dirname,'web/src/js/companyStation.js'),
 		//分页插件
 		pagination:path.join(__dirname,'web/src/libs/js/jquery.pagination.min.js'),
 		bootstrapjs:path.join(__dirname,'web/src/libs/js/bootstrap.min.js'),
@@ -106,6 +107,10 @@ module.exports={
 		ExtractCSS,
 		//xml主页
 		new HtmlWebpackPlugin({
+			minify: {
+				//removeAttributeQuotes:true, //取出属性引号
+				removeComments:true  //去除注释
+			},
 			filename:'index.html',  //输出文件名称
 			template:path.join(__dirname,'web/src/index.html'), //模版位置
 			inject:true,
@@ -119,12 +124,33 @@ module.exports={
 		}),
 		//routeMaker编辑页面
 		new HtmlWebpackPlugin({
+			minify: {
+				//removeAttributeQuotes:true, //取出属性引号
+				removeComments:true  //去除注释
+			},
 			filename:'html/routeMaker.html',
 			template:path.join(__dirname,'web/src/html/routeMaker.html'),
 			inject:true,
 			chunks:['common_jq','pagination','markerclusterer','bootstrapjs','routemaker'],
 			chunksSortMode: function (chunk1, chunk2) {
 				var order = ['common_jq','pagination','markerclusterer','bootstrapjs','routemaker'];
+				var order1 = order.indexOf(chunk1.names[0]);
+				var order2 = order.indexOf(chunk2.names[0]);
+				return order1 - order2;  
+			}
+		}),
+		//公司站点管理
+		new HtmlWebpackPlugin({
+			minify: {
+				//removeAttributeQuotes:true, //取出属性引号
+				removeComments:true  //去除注释
+			},
+			filename:'html/companyStation.html',
+			template:path.join(__dirname,'web/src/html/company_station.html'),
+			inject:true,
+			chunks:['common_jq','pagination','markerclusterer','bootstrapjs','companyStation'],
+			chunksSortMode: function (chunk1, chunk2) {
+				var order = ['common_jq','pagination','markerclusterer','bootstrapjs','companyStation'];
 				var order1 = order.indexOf(chunk1.names[0]);
 				var order2 = order.indexOf(chunk2.names[0]);
 				return order1 - order2;  
@@ -199,8 +225,8 @@ module.exports={
 				flatten : true
 			},
 			{
-				from :'web/src/images/**',  ////复制google地图图片
-				to : 'images/',
+				from :'web/src/libs/images/**',  ////复制google地图图片
+				to : 'libs/images/',
 				flatten : true
 			}
 		]),
@@ -230,13 +256,13 @@ module.exports={
         }),
         ******/
 		//压缩
-		/*****/
+		/**
 		new webpack.optimize.UglifyJsPlugin({
 			sourceMap:true,
 			compress:{
 				warnings:false
 			}
-		}),
+		}),***/
 
 		//发布前清空发布目录
 		/*****

@@ -1,9 +1,11 @@
 var pinyin = require("pinyin");  //将汉字转为拼音
+import i18next from 'i18next';
+import XHR from 'i18next-xhr-backend'; 
 import {input_check_fun} from './pagination'; //输入框名字
 import {cal_station_id,parseQueryString} from './functions'; //得到站点id和经纬度
 import {fromLatLngToPixel} from './ContextMenu';
 import {marker_drag_ev,draw_line} from './marker_drag';
-import {search_latlng} from './search_place_name';
+import {search_latlng,search_place} from './search_place_name';
 
 var company_id=Number(parseQueryString(window.location.href).uid);  //公司id
 
@@ -51,12 +53,12 @@ window.markerClusterer = new MarkerClusterer(map, markers, {
 });
 
 window.infoWindow = new google.maps.InfoWindow;  //窗口提示
-
+window.search_tmp_marker;  //搜索时的临时点，点击确定或者重新搜索会被替换掉
 //地址搜索控件
 window.map_input = /** @type {!HTMLInputElement} */(
     document.getElementById('place_input'));
-//地址搜索框点击提交
-//地名搜索表单提交
+//map.controls[google.maps.ControlPosition.TOP_LEFT].push(map_input);
+//根据地名搜索经纬度
 $('#latlng_search').submit(function(e){
     e.preventDefault();  //阻止对表单的提交
     var place_name = $('#latlng_search .latlng_search input.input_addr').val().trim();
@@ -71,7 +73,7 @@ $('#latlng_search').submit(function(e){
             }
         }
         map.setCenter(latLng);
-        map.setZoom(17);  // Why 17? Because it looks good.
+        map.setZoom(20);  // Why 17? Because it looks good.当20时可以放大到10米的比例尺
         $('#myModal').modal('show');
         $('#myModal .modal-body input.mark_name').val('');  //清空名称
         //点击模态框的No
@@ -92,36 +94,42 @@ $('#latlng_search').submit(function(e){
             if(!check_input_filename){  //不满足输入条件
                 return;
             }
+            var input_val=$('#myModal input.mark_name').val().trim();
             $('#myModal').modal('hide');
-            var addr_content='<div><strong>' + place_name + '</strong><br>' + place_name+'</div>';
+            var addr_content='<div><strong>' + input_val + '</strong><br>' + input_val+'</div>';
             //新标记
             var ret_data = cal_station_id(company_id,lat_lng,company_markers);
+            //console.log(ret_data)
             if(!ret_data){ //如果返回false
-                var p_tip=`<p class="add_mark_tip">There is a tag that is too small for this tag.</p>`;
-                $('#place_input').after($(p_tip)).siblings('p.add_mark_tip')
-                .animate({top:15},1000,function(){
-                    setTimeout(function(){
-                        $('#google_map_box p.add_mark_tip').remove();
-                    },2000);
-                });
+                var tip_err = i18next.t('Mark_near');
+                $('#myModal .modal-body p.err_tip').text(tip_err).fadeIn(1);
+                setTimeout(function(){
+                    $('#myModal .modal-body p.err_tip').text('').fadeOut(1);
+                },2000);
                 return;
             }
 
+            //删除之前的临时标记
+            if(window.search_tmp_marker){
+                search_tmp_marker.setMap(null);
+            }
+            
             //表示下面开始添加标记
             var station_id = ret_data.station_id;  //站点id
             var marker = new google.maps.Marker({
-                map: map,
+                //map: map,
                 addr_content : addr_content,
                 station_id:ret_data.station_id,
                 origin_station_id : ret_data.station_id,  //初始的station_id
-                station_name:place_name,
+                station_name:input_val,
                 draggable:true
             });
             marker.setPosition(ret_data.latLng);
-            
-            //公司新增站点请求
-            window.my_company_stations.add_station_req(marker,place_name,addr_content,ret_data);
-            
+            search_place(ret_data.latLng)
+            .then(function(city_name){
+                //公司新增站点请求
+                window.my_company_stations.add_station_req(marker,input_val,addr_content,ret_data,city_name);
+            });
         });
 
     },function(msg){
@@ -130,6 +138,7 @@ $('#latlng_search').submit(function(e){
         }
 
     })
+
 });
 
 //刷新聚类标记
@@ -173,8 +182,13 @@ function add_company_mark_repeat(company_id,latLng,company_markers){
             },2000);
         });
         return;
-    }
-    $('#marker_name').fadeIn();  //标记命名显示
+    };
+    //获取该经纬度所在地点名称
+    search_place(ret_data.latLng)
+    .then(function(city_name){
+        $('#marker_name').fadeIn()  //标记命名显示
+        .find('.my_inp input.mark_name').val(city_name);
+    });
     //点击命名确定
     $('#marker_name .my_btn button.confirm').unbind('click');
     $('#marker_name .my_btn button.confirm').bind('click',function(e){
@@ -185,10 +199,9 @@ function add_company_mark_repeat(company_id,latLng,company_markers){
         }
         //满足条件增加标记
         var input_val=$('#marker_name .my_inp input.mark_name').val().trim();
-        $('#marker_name').fadeOut().find('input.mark_name').val('');  //标记命名隐藏
         var addr_content='<div><strong>' + input_val + '</strong><br></div>';
         var marker = new google.maps.Marker({
-            map:map,
+            //map:map,
             position:ret_data.latLng,
             addr_content : addr_content,
             station_id:ret_data.station_id,
@@ -197,8 +210,11 @@ function add_company_mark_repeat(company_id,latLng,company_markers){
             draggable:true
         });
         map.setCenter(ret_data.latLng);
-        //公司新增站点请求
-        window.my_company_stations.add_station_req(marker,input_val,addr_content,ret_data);
+        search_place(ret_data.latLng)
+        .then(function(city_name){
+            //公司新增站点请求
+            window.my_company_stations.add_station_req(marker,input_val,addr_content,ret_data,city_name);
+        });
     });
 }
 //地图菜单选项点击事件
@@ -254,6 +270,7 @@ function menu_click(latLng){
                                     var li_station_id=Number($table_body.eq(j).attr('station_id'));
                                     if(marker_station_id==li_station_id){
                                         $table_body.eq(j).removeClass('chosen');  //增加添加过的样式
+                                        $table_body.eq(j).find('td.action i').fadeIn(1);  //增加添加过的样式
                                         break;
                                     }
                                 }
@@ -309,7 +326,12 @@ window.marker_click=function(marker){
     var map_width=$('#google_map').width();   //地图宽度
     var menu_width=$('#map_menu').width();   //菜单宽度
 
-    marker.addListener('click',function(e){
+    /* marker.addListener('click',function(e){
+        var addr_cont=this.addr_content; //地址
+        infoWindow.setContent(addr_cont);
+        infoWindow.open(map, marker);
+    }); */
+    marker.addListener('mouseover',function(e){
         var addr_cont=this.addr_content; //地址
         infoWindow.setContent(addr_cont);
         infoWindow.open(map, marker);

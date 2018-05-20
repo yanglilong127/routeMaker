@@ -1,7 +1,7 @@
 //分页使用
 import i18next from 'i18next';
 import XHR from 'i18next-xhr-backend';
-import {byte2} from './functions';  //字节转换
+import {byte2,htmlspecialchars} from './functions';  //字节转换
 import {server_ip,login_url} from '../configs/setting';
 import {forMatDate,parseQueryString} from './functions';  //时间格式转换
 
@@ -32,7 +32,7 @@ var getDataTable=function(page=1,nums_limit=10,first_load=true,filename=''){
 
                 var page_num=Math.ceil(dataLen/nums_limit);  //页数
                 //初始化显示部分
-                init_show(dataSize,disk_space,dataLen,page_num,first_load);
+                init_show(dataSize,disk_space,dataLen,page,first_load);
                 create_list(data);
                 //分页
                 split_page(page_num,page);
@@ -57,19 +57,19 @@ var split_page=function(totalPage,currentPage=1,count=5){
     $('#pageShow .Page').pagination({
         totalPage: totalPage,   // 总页数
         currentPage: currentPage,  // 当前页数
-	    isShow: true,    // 是否显示首尾页
+	    isShow: false,    // 是否显示首尾页
 		count: count,        // 显示个数
-		homePageText: 'Start',  // 首页文本
-		endPageText: 'End',   // 尾页文本
-		prevPageText: "<<",// 上一页文本
-		nextPageText: ">>",// 下一页文本
+		//homePageText: 'Start',  // 首页文本
+		//endPageText: 'End',   // 尾页文本
+		prevPageText: "prevPage",// 上一页文本
+		nextPageText: "nextPage",// 下一页文本
         callback: function(current) {  // 回调,current(当前页数)
 			//1. 获取当前页数和总页数
             //var info=$("#pageShow .Page").pagination("getPage");// 获取当前页数和总页数
 			//$('#currentPage').text(info.current);
             //$('#totalPage').text(info.total); 
             //更改当前页码显示
-            $('#pageShow .info_show span.currPage').text(current);
+            //$('#pageShow .info_show span.currPage').text(current);
             //改变数据
             var show_num=$('#getData p.info_tip select.showpage').val();
             getDataTable(current,show_num);
@@ -92,26 +92,61 @@ var create_list=function(data){
     for(var i=0; i<data.length; i++){
         var ctime=forMatDate(new Date(Number(data[i].ctime)));
         var mtime=forMatDate(new Date(Number(data[i].mtime)));
+        var xml_addr = data[i].xml_addr;  //xml的下载地址
         //编辑页面跳转地址
-        var edit_url=url+'&xml_id='+data[i].ctime;
+        var edit_url=url+'&xml_id='+data[i].ctime+ '&route_name='+data[i].filename;
         var xuanzhong='';
         if(window.all_routes.indexOf(data[i].ctime)!=-1){
             xuanzhong='route_icon-xuanzhong';
         }
+        var added_languages=data[i].languages;  //该路线添加的语言
+        var added_languages_arrs= added_languages.split(','); //将其转为数组
+        added_languages_arrs = added_languages_arrs.join(' ');
         var routes=data[i].routes.split(',');
-        var border_box='',edit='',route_drive='';
+        var border_box='',edit='',clone='',route_drive='';
+        var merge_class='';  //合并路线的背景颜色
         if(routes[1]){  //是合并的
+            merge_class = 'merge';
+            edit= `<a class='edit'>
+                        <span class='num'>${data[i].station_num}</span>
+                    </a>`;
         }else{
             border_box=`<div class="border_box_check">
                             <!--<i class="icon route_iconfont route_icon-xuanzhong"></i>-->
                             <i class="icon route_iconfont choose ${xuanzhong}"></i>
                         </div>`;
-            edit=`<a href='${edit_url}'>
-                    <i class="icon route_iconfont route_icon-bianji"></i>
-                </a>`;
-            route_drive=`<i class="icon route_iconfont route_icon-zidongjiashi"></i>`;
+            edit= `<a class='edit jump' href='${edit_url}'>
+                        <span class='num'>${data[i].station_num}</span>
+                        <span class='edit'>+</span>
+                    </a>`;
+            clone = `<i class="icon route_iconfont route_icon-clone clone"></i>`;
+            route_drive=`<i class="icon route_iconfont route_icon-zidongjiashi sim_drive"></i>`;
         }
-        var li_list=`<tr xml_id='${data[i].ctime}'>
+        var action_xiazai;
+        if(xml_addr){  //如果下载地址有
+            xml_addr += '.xml';
+            var download_filename = xml_addr.split('\/')[xml_addr.split('\/').length-1];
+            var time1 = download_filename.slice(download_filename.lastIndexOf('_')+1,download_filename.lastIndexOf('.'));
+            var time2 = forMatDate(new Date(Number(data[i].mtime)),false);
+            if(time1 == time2){
+                action_xiazai = `<a class='xiazai' href='${xml_addr}' download='${download_filename}'>
+                        <i class="icon route_iconfont route_icon-comiisxiazai download"></i>
+                        <span class='need_update'>*</span>
+                    </a>`;
+            }else{
+                action_xiazai = `<a class='xiazai' href='${xml_addr}' download='${download_filename}'>
+                        <i class="icon route_iconfont route_icon-comiisxiazai download"></i>
+                        <span class='need_update fadein'>*</span>
+                    </a>`;
+            } 
+            
+        }else{
+            action_xiazai = `<a class='xiazai'>
+                        <i class="icon route_iconfont route_icon-comiisxiazai noclick download"></i>
+                        <span class='need_update'>*</span>
+                    </a>`;
+        }
+        var li_list=`<tr xml_id='${data[i].ctime}' class='${merge_class}'>
                         <th class='index'>${i+1}</th>
                         <th class='click_choose'>
                             ${border_box}
@@ -122,22 +157,32 @@ var create_list=function(data){
                                 <i class="icon route_iconfont route_icon-ziti"></i>
                             </button>
                         </th>
-                        <th class='ctime'>${ctime}</th>
-                        <th class='mtime'>${mtime}</th>
                         <th class='description'>
                             <span class='text'>${data[i].description}</span>
                             <button class="btn btn-primary btn-xs detail">
                                 <i class="icon route_iconfont route_icon-xiangqing"></i>
                             </button>
                         </th>
-                        <th class='station_num'>${data[i].station_num}</th>
-                        <th class='language_num'>${data[i].language_num}</th>
-                        <th class='edit'>${edit}</th>
-                        <th class='route_info'><i class="icon route_iconfont route_icon-chakan"></i></th>
-                        <th class='route_drive'>${route_drive}</th>
-                        <th class='delete'><i class="icon route_iconfont route_icon-shanchu"></i></th>
+                        <th class='station_num'>
+                            ${edit}
+                        </th>
+                        <th class='language_num'>
+                            <span class='language_list' data-toggle="tooltip" data-placement="top"
+                                 title="${added_languages_arrs}">${added_languages}</span>
+                            <span class='info'>+</span>
+                        </th>
+                        <th class='ctime'>${ctime}</th>
+                        <th class='mtime'>${mtime}</th>
+                        <th class='action'>
+                            ${clone}
+                            ${route_drive}
+                            ${action_xiazai}
+                            <i class="icon route_iconfont route_icon-shanchu delete"></i>
+                        </th>
                     </tr>`;
         $('#getDataTable table tbody').append($(li_list));
+        //为其添加提示工具
+        $('[data-toggle="tooltip"]').tooltip();
         delt_event();  //处理表格点击事件
     }
 }
@@ -147,7 +192,7 @@ var create_list=function(data){
  * used_space传过来的数据单位是字节 用户已用空间
  * total_space传过来的数据单位是MB，  用户分配的空间大小
  * **/
-var init_show=function(used_space,total_space,total_num,pages,first_load){
+var init_show=function(used_space,total_space,total_num,page,first_load){
     if(first_load){
         var rate=parseInt(used_space*10/total_space)/10;  //比例
         $('#heading_contain .heading_cipan .progress-bar').css({width:rate+'%'}); 
@@ -156,8 +201,19 @@ var init_show=function(used_space,total_space,total_num,pages,first_load){
         $('#heading_contain .heading_cipan .number_info span.number1').text(used_space);
         $('#heading_contain .heading_cipan .number_info span.number2').text(total_space);
     }
+    var show_num = Number($('#getData .showpage').val()); //每页显示的数量
+    var page_num=Math.ceil(total_num/show_num);  //页数
+
+    var fromNum = total_num>0? show_num * (page -1) + 1 : 0;  //起始条数
+    var toNum;  //终止条数
+    if(page < page_num){
+        toNum = fromNum + show_num -1;
+    }else{
+        toNum = total_num;
+    }
+    $('#pageShow .info_show span.from_num').text(fromNum);
+    $('#pageShow .info_show span.to_num').text(toNum);
     $('#pageShow .info_show span.total').text(total_num);
-    $('#pageShow .info_show span.totalPages').text(pages);
     if(total_num>0){
         $('#getDataTable table tfoot').fadeOut(1);  //隐藏表格脚步
     }else{
@@ -228,7 +284,7 @@ var delt_event=function(){
                         var this_routes=res.data.routes;  //该路线的站点集合
                         var route_name=res.data.filename;  //路线名
                         this_routes=this_routes.split(','); //转为数组
-                        _this.siblings('.station_num').text(station_num); //改变站点数，防止不一致
+                        _this.siblings('.station_num').find('a.edit span.num').text(station_num); //改变站点数，防止不一致
                         if(station_num > 0){  //有站点
                             $xuanzhong.addClass('route_icon-xuanzhong');
                             for(var i=0; i<this_routes.length; i++){
@@ -308,16 +364,18 @@ var delt_event=function(){
         $('#show_detail').fadeIn();
         $('#show_detail .my_inp input.xml_name').fadeOut(1).val('');
         var description_detail=i18next.t('Description_detail');
-        $('#show_detail p.myBg span').text(description_detail);  //更改标题
+        $('#show_detail p.myBg span').text(description_detail).attr('data-i18n','Description_detail');  //更改标题
         var _this=$(this);
         var description=$(this).siblings('span.text').text();  //详情文本
-        $('#show_detail .my_inp textarea.xml_description').fadeIn(1).val(description);
+        var $description_ele = $('#show_detail .my_inp textarea.xml_description');
+        $description_ele.fadeIn(1).val(description).css({'height':'0'}).height($description_ele.get(0).scrollHeight);
         var xml_id=$(this).parent().parent().attr('xml_id');  //xml对应的id
         //点击确定按钮提交更改
         $('#show_detail .my_btn button.confirm').unbind('click');
         $('#show_detail .my_btn button.confirm').bind('click',function(e){
             e.stopPropagation();
             var change_description=$('#show_detail textarea.xml_description').val().trim();  //更改后的详情文本
+
             if(description == change_description){
                 $('#show_detail').fadeOut();
             }else{
@@ -326,7 +384,7 @@ var delt_event=function(){
                     url:'/myroute/change_xml_description',
                     type:'post',
                     data:{
-                        description:change_description,
+                        description:htmlspecialchars(change_description),
                         xml_id
                     },
                     success:function(res,status){
@@ -351,7 +409,7 @@ var delt_event=function(){
         var _this=$(this);
         $('#show_detail').fadeIn();
         var rename_filename=i18next.t('Rename_filename');
-        $('#show_detail p.myBg span').text(rename_filename);  //更改文件名
+        $('#show_detail p.myBg span').text(rename_filename).attr('data-i18n','Rename_filename');  //更改文件名
         $('#show_detail .my_inp textarea.xml_description').fadeOut(1).val('');
         var filename=$(this).siblings('span').text();  //文件名
         $('#show_detail .my_inp input.xml_name').fadeIn(1).val(filename);
@@ -391,7 +449,8 @@ var delt_event=function(){
                         }else if(res.msg=='has'){  //表示名称存在
                             $('#zhezhao').fadeOut(1);
                             var exist_filename=res.filename;
-                            $('#show_detail .my_inp p.err_tip').text('A similar route name exists:'+exist_filename)
+                            var tip_text = i18next.t('Routename_exist') +exist_filename;
+                            $('#show_detail .my_inp p.err_tip').text(tip_text)
                             .stop(true).fadeIn();
                             setTimeout(function(){
                                 $('#show_detail .my_inp p.err_tip').fadeOut();
@@ -401,21 +460,76 @@ var delt_event=function(){
                             $('#zhezhao').fadeOut(1);
                             $('#show_detail').fadeOut();
                             _this.siblings('span').text(new_filename); //变为更改后的内容
+                            //更改跳转连接的url
+                            var $a_ele = _this.parent().siblings('th.station_num').find('a.edit');
+                            var jump_url=$a_ele.attr('href').split('&route_name=')[0];
+                            jump_url += '&route_name='+new_filename;
+                            $a_ele.attr('href',jump_url);
+                            //提示语需要更新
+                            var changed_routes = [];
+                            for(var i=0; i<res.changed_routes.length; i++){
+                                let route_id= res.changed_routes[i].ctime;
+                                changed_routes.push(route_id);
+                            };
+                            var $main_table_tr = $('#getDataTable table tbody tr');
+                            for(var i=0; i<$main_table_tr.length; i++){
+                                let route_id = $main_table_tr.eq(i).attr('xml_id');
+                                if(changed_routes.indexOf(route_id)!=-1){
+                                    $main_table_tr.eq(i).find('th.action a.xiazai span.need_update').addClass('fadein');
+                                }
+                            }
                         }
                     }
                 });
+            }else{ //相等
+                var tip_text = i18next.t('NoChange');
+                $('#show_detail .my_inp p.err_tip').text(tip_text)
+                .stop(true).fadeIn();
+                setTimeout(function(){
+                    $('#show_detail .my_inp p.err_tip').fadeOut();
+                },3000);
             }
         });
     });
 
     //点击删除按钮
-    $('#getDataTable table tbody tr th.delete').unbind('click');
-    $('#getDataTable table tbody tr th.delete').bind('click',function(e){
+    $('#getDataTable table tbody tr th.action i.delete').unbind('click');
+    $('#getDataTable table tbody tr th.action i.delete').bind('click',function(e){
         e.stopPropagation();
-        $('#myModal').modal('show');
-        var xml_id=Number($(this).parent().attr('xml_id'));
-        var filename=$(this).siblings('th.filename').find('span').text();
+        var xml_id=Number($(this).parent().parent().attr('xml_id'));
+        var filename=$(this).parent().siblings('th.filename').find('span').text();
         //console.log(xml_id)
+        //查询该路线被用于哪些合并路线中
+        if(!$(this).parent().parent().hasClass('merge')){ //如果不是合并路线
+            $.ajax({
+                url:'/myroute/route_been_used',
+                type:'post',
+                data:{xml_id},
+                success:function(res){
+                    if(res.msg=='err'){
+                        window.location.reload();
+                    }else if(res.msg='ok'){
+                        $('#zhezhao').fadeOut(1);
+                        var routes = res.routes; //路线名称数组
+                        var filenames = '';
+                        for(var i=0; i<routes.length; i++){
+                            filenames += routes[i].filename;
+                            if(i!= routes.length-1){
+                                filenames += ',';
+                            }
+                        };
+                        if(routes.length>0){
+                            var mal_tip = i18next.t('Used_routes')+ filenames;
+                            $('#myModal').modal('show').find('.modal-body').fadeIn(1).html(mal_tip);
+                        }else{
+                            $('#myModal').modal('show').find('.modal-body').fadeOut(1);
+                        }
+                    }
+                }
+            });
+        }else{
+            $('#myModal').modal('show').find('.modal-body').fadeOut(1);
+        }
         //点击模态框的确认
         $('#myModal .modal-footer button.confirm').unbind('click');
         $('#myModal .modal-footer button.confirm').bind('click',function(e){
@@ -433,41 +547,43 @@ var delt_event=function(){
                         window.location.reload();
                     }else if(res.msg='ok'){
                         $('#zhezhao').fadeOut(1);
-                        var show_num=$('#getData p.info_tip select.showpage').val();
-                        var cur_page=Number($('#pageShow .info_show span.currPage').text());
+                        var show_num=Number($('#getData p.info_tip select.showpage').val());
+                        var cur_page=Math.ceil(Number($('#pageShow .info_show span.from_num').text())/show_num);
                         var xml_len=$('#getDataTable table tbody tr').length;  //目前存在的是否为最后一个
                         if(xml_len ==1){
                             getDataTable(cur_page-1,show_num);
                         }else{
                             getDataTable(cur_page,show_num);
-                        }
-                        
+                        }  
                     }
                 }
             });
         });
     });
 
-    //点击查看路线信息
-    $('#getDataTable table tbody tr th.route_info').unbind('click');
-    $('#getDataTable table tbody tr th.route_info').bind('click',function(e){
+    //点击查看路线信息,变更为点击语言栏目
+    $('#getDataTable table tbody tr th.language_num span.info').unbind('click');
+    $('#getDataTable table tbody tr th.language_num span.info').bind('click',function(e){
         e.stopPropagation();
-        var xml_id=Number($(this).parent().attr('xml_id')); //路线id
+        var $this = $(this).parent(); //使之赋值给它的父标签
+        var xml_id=Number($this.parent().attr('xml_id')); //路线id
+        var $this = $this;
         //判断该路线是否是合并的路线
-        var isMergeRoute=$(this).siblings('th.click_choose').html().trim();
+        var isMergeRoute=$this.siblings('th.click_choose').html().trim();
         //警告框显示
         var waring_info= i18next.t('modify_transition_tip');
         $('.route_info.merge_route .modal-body .waring_info').fadeIn(1)
         .find('p.tip_info').text(waring_info);
         if(isMergeRoute){  //单一路线
             //先清空表格内容
-            $('#language_table tbody').html('');
-            $('#language_table thead tr th:gt(1)').remove();
+            $('#language_table thead tr th:gt(0)').remove();
+            $('#language_table tbody tr:gt(0)').remove()
+            $('#language_table tbody tr:eq(0) th:gt(0)').remove();
             //清空已选择的语言
             $('#choose_language .language_box ul li.language').remove();
             $('#language_lists_box .languages_left li.country_text i.icon').removeClass('route_icon-xuanzhong');
-            var filename=$(this).siblings('th.filename').find('span').text();  //文件名
-            var index=$(this).siblings('th.index').text();
+            var filename=$this.siblings('th.filename').find('span').text();  //文件名
+            var index=$this.siblings('th.index').text();
             $('#route_info').modal('show').attr({
                 'xml_id':xml_id,'filename':filename,'index':index
             });
@@ -475,7 +591,6 @@ var delt_event=function(){
             $('#route_info .modal-footer button.download').addClass('disabled')
             .removeClass('btn-primary').find('a').attr({'download':null,href:null}).css({color:'red'});
             $('#zhezhao').fadeIn(1);  //遮罩显示
-            
             //请求数据
             $.ajax({
                 url: '/myroute/get_routeInfo',
@@ -487,27 +602,23 @@ var delt_event=function(){
                         var route_datas=res.route_data;  //路线语言及翻译数据
                         var station_data1=res.stations_data1;  //站点语言及翻译数据
                         var station_data2=res.stations_data2;  //站点经纬度
-                        //console.log(route_datas,station_data1,station_data2)
-                        //先添加前两列的内容,语言
+                        //console.log(route_datas,station_data1,station_data2);
+                        //先添加前两行的内容,语言
                         for(var i=0; i<route_datas.length; i++){
                             let ID=route_datas[i].ID;  //语言
                             let language=route_datas[i].lang;  //语言
                             let name=route_datas[i].transition;  //翻译
-                            let row;
+                            let head_th = `<th route_lang_id=${ID}>${language}</th>`;  
+                            let body_th;  
                             if(language=='en.US'){
-                                row=`<tr route_lang_id=${ID}>
-                                        <th>${language}</th>
-                                        <th>${name}</th>
-                                    </tr>`;
+                                body_th=`<th>${name}</th>`;
                             }else{
-                                row=`<tr route_lang_id=${ID}>
-                                        <th>${language}</th>
-                                        <th>
-                                            <input type="text" class="form-control" value='${name}'>
-                                        </th>
-                                    </tr>`;
+                                body_th=`<th>
+                                            <input type="text" class="form-control" value='${name}' origin_val='${name}'>
+                                        </th>`;
                             }
-                            $('#language_table tbody').append($(row));
+                            $('#language_table thead tr').append($(head_th));
+                            $('#language_table tbody tr:eq(0)').append($(body_th));
                             //添加语言列表
                             var li;
                             if(language=='en.US'){
@@ -539,13 +650,13 @@ var delt_event=function(){
                             var station_lat=station_data2[i].lat;
                             var station_lon=station_data2[i].lng;
                         
-                            //先添加表头thead
+                            //先添加列的站点
                             var Station_mul_lang=i18next.t('Station'); //Station对应多语言的文字
-                            var thead=`<th id='${station_id}' lat='${station_lat}' lon='${station_lon}'>
-                                    ${Station_mul_lang} ${i+1}</th>`
-                            $('#language_table thead tr').append($(thead));
+                            var tbody=`<tr id='${station_id}' lat='${station_lat}' lon='${station_lon}'><th>
+                                    ${Station_mul_lang} ${i+1}</th></tr>`;
+                            $('#language_table tbody').append($(tbody));
                             
-                            //再添加body语言
+                            //再添加body翻译语言
                             for(var j=0; j<route_datas.length; j++){  
                                 var language_code=route_datas[j].lang;
                                 for(var k=0; k<station_data1.length; k++){  //循环语言行
@@ -555,10 +666,16 @@ var delt_event=function(){
                                     let _transition=station_data1[k].transition;
                                     
                                     if(language_code==_lang && station_id==_station){
-                                        var th=`<th station_lang_id=${_ID}>
-                                                    <input type="text" class="form-control" value='${_transition}'>
-                                                </th>`
-                                        $('#language_table tbody tr').eq(j).append($(th));
+                                        var th;
+                                        if(language_code == 'en.US'){
+                                            th=`<th station_lang_id=${_ID}>${_transition}</th>`;
+                                        }else{
+                                            // origin_val值为原先的翻译
+                                            th=`<th station_lang_id=${_ID}>
+                                                    <input type="text" class="form-control" value='${_transition}' origin_val='${_transition}'>
+                                                </th>`;
+                                        }
+                                        $('#language_table tbody tr:last').append($(th));
                                         break;
                                     }
                                 }
@@ -566,7 +683,7 @@ var delt_event=function(){
                         }
                         //触发点击确定事件
                         $('#route_info').addClass('click_comfirm');
-                        $('#route_info .modal-footer button.confirm').trigger('click');
+                        $('#route_info .modal-footer button.confirm').trigger('click',{operation_by_myself:false,save_operation:true});
                         setTimeout(function(){
                             $('#route_info').removeClass('click_comfirm');
                         },1000);
@@ -580,12 +697,16 @@ var delt_event=function(){
             $('#merge_route_info .modal-footer button.download').addClass('disabled')
             .removeClass('btn-primary')
             .find('a').attr({'download':null,href:null}).css({color:'red'});
-            var filename=$(this).siblings('th.filename').find('span').text();  //文件名
-            $('#merge_route_info').modal('show').attr({'xml_id':xml_id,'filename':filename});
+            var filename=$this.siblings('th.filename').find('span').text();  //文件名
+            var index=$this.siblings('th.index').text();
+            $('#merge_route_info').modal('show').attr({
+                'xml_id':xml_id,'filename':filename,'index':index
+            });
             //更改路线名
             $('#merge_route_info .modal-header span.route_name').text(filename);
             $('body').css({'padding':'0px'});
             $('#merge_route_info .modal-body .body_table').html('');  //清空表格
+
             $.ajax({
                 url:'/myroute/get_merge_route_info',
                 type:'post',
@@ -596,10 +717,13 @@ var delt_event=function(){
                     $('#zhezhao').fadeOut(1);  //遮罩隐藏
                     if(res.msg=='ok'){
                         var result=res.result;  //返回的结果
+                        var stations_num = res.stations_num;  //取出重复站点后的站点数
                         var Language_transi=i18next.t('Language'); //翻译
                         var Route_name_transi=i18next.t('Route_name'); //翻译
                         var Station_transi=i18next.t('Station'); //翻译
-
+                        //console.log(result,stations_num)
+                        //更新站点数目
+                        $this.siblings('th.station_num').text(stations_num);
                         //查看是否有空数据，即其每条路线的组成是否都存在
                         for(var m=0; m<result.length; m++){
                             var route_datas=result[m].route_data;  //路线语言及翻译数据
@@ -634,57 +758,34 @@ var delt_event=function(){
                                         <thead>
                                             <tr>
                                                 <th data-i18n='Language'>${Language_transi}</th>
-                                                <th data-i18n='Route_name'>${Route_name_transi}</th>
                                             </tr>
                                         </thead>
-                                        <tbody></tbody>
+                                        <tbody>
+                                            <tr>
+                                                <th data-i18n='Route_name'>${Route_name_transi}</th>
+                                            </tr>
+                                        </tbody>
                                     </table>`;
                             var $table_box=$('#merge_route_info .modal-body .body_table');
                             $table_box.append($(table));
                     
-                            //先添加前两列的内容,语言
+                             //先添加前两行的内容,语言
                             for(var i=0; i<route_datas.length; i++){
                                 let ID=route_datas[i].ID;  //语言
                                 let language=route_datas[i].lang;  //语言
                                 let name=route_datas[i].transition;  //翻译
-                                let row;
+                                let head_th = `<th route_lang_id=${ID}>${language}</th>`;  
+                                let body_th;  
                                 if(language=='en.US'){
-                                    row=`<tr route_lang_id=${ID}>
-                                            <th>${language}</th>
-                                            <th>${name}</th>
-                                        </tr>`;
+                                    body_th=`<th>${name}</th>`;
                                 }else{
-                                    row=`<tr route_lang_id=${ID}>
-                                            <th>${language}</th>
-                                            <th>
-                                                <input type="text" class="form-control" value='${name}'>
-                                            </th>
-                                        </tr>`;
+                                    // origin_val值为原先的翻译
+                                    body_th=`<th>
+                                                <input type="text" class="form-control" value='${name}' origin_val='${name}'>
+                                            </th>`;
                                 }
-                                $table_box.find('table').eq(m).append($(row));
-                                //添加语言列表
-                                var li;
-                                if(language=='en.US'){
-                                    li=`<li class="language">
-                                            <span route_id=${ID}>${language}</span>
-                                        </li>`;
-                                }else{
-                                    li=`<li class="language">
-                                            <span route_id=${ID}>${language}</span>
-                                            <i class="icon route_iconfont route_icon-shanchu"></i>
-                                        </li>`;
-                                }
-                                var $language_ul=$('#choose_language .language_box ul.chosen');
-                                $language_ul.find('.clear').before($(li));
-                                var $language_chosen=$('#language_lists_box li.country_text');
-                                //为已存在的语言添加选择图标
-                                for(var j=0; j<$language_chosen.length; j++){
-                                    let callname=$language_chosen.eq(j).attr('callname');
-                                    if(language== callname){
-                                        $language_chosen.eq(j).find('i.icon').addClass('route_icon-xuanzhong');
-                                    }
-                                }
-                                delete_language();  //删除语言
+                                $table_box.find('table').eq(m).find('thead tr').append($(head_th));
+                                $table_box.find('table').eq(m).find('tbody tr:eq(0)').append($(body_th));
                             }
                             //再添加站点
                             for(var i=0; i<station_data2.length; i++){ //循环站点列
@@ -693,13 +794,13 @@ var delt_event=function(){
                                 var station_lat=station_data2[i].lat;
                                 var station_lon=station_data2[i].lng;
                             
-                                //先添加表头thead
+                                //先添加列的站点
                                 var Station_mul_lang=i18next.t('Station'); //Station对应多语言的文字
-                                var thead=`<th id='${station_id}' lat='${station_lat}' lon='${station_lon}'>
-                                        ${Station_mul_lang} ${i+1}</th>`
-                                $table_box.find('table').eq(m).find('thead tr').append($(thead));
+                                var tbody=`<tr id='${station_id}' lat='${station_lat}' lon='${station_lon}'><th>
+                                        ${Station_mul_lang} ${i+1}</th></tr>`;
+                                $table_box.find('table').eq(m).find('tbody').append($(tbody));
                                 
-                                //再添加body语言
+                                //再添加body翻译语言
                                 for(var j=0; j<route_datas.length; j++){  
                                     var language_code=route_datas[j].lang;
                                     for(var k=0; k<station_data1.length; k++){  //循环语言行
@@ -709,10 +810,15 @@ var delt_event=function(){
                                         let _transition=station_data1[k].transition;
                                         
                                         if(language_code==_lang && station_id==_station){
-                                            var th=`<th station_lang_id=${_ID}>
-                                                        <input type="text" class="form-control" value='${_transition}'>
-                                                    </th>`
-                                            $table_box.find('table').eq(m).find('tbody tr').eq(j).append($(th));
+                                            var th;
+                                            if(language_code == 'en.US'){
+                                                th=`<th station_lang_id=${_ID}>${_transition}</th>`;
+                                            }else{
+                                                th=`<th station_lang_id=${_ID}>
+                                                        <input type="text" class="form-control" value='${_transition}' origin_val='${_transition}'>
+                                                    </th>`;
+                                            }
+                                            $table_box.find('table').eq(m).find('tbody tr:last').append($(th));
                                             break;
                                         }
                                     }
@@ -727,7 +833,7 @@ var delt_event=function(){
                         setTimeout(function(){
                             $('#merge_route_info').removeClass('click_comfirm');
                         },1000);
-                        $('#merge_route_info .modal-footer button.confirm').trigger('click');
+                        $('#merge_route_info .modal-footer button.confirm').trigger('click',{operation_by_myself:false,save_operation:true});
                         
                     }else if(res.msg=='no'){
                         alert('this route is not exists.');
@@ -746,13 +852,91 @@ var delt_event=function(){
         }
     });
 
-    //点击模拟驾驶车的按钮
-    $('#getDataTable table tbody tr th.route_drive').unbind('click');
-    $('#getDataTable table tbody tr th.route_drive').bind('click',function(e){
+    //点击Clone克隆按钮
+    $('#getDataTable table tbody tr th.action i.clone').unbind('click');
+    $('#getDataTable table tbody tr th.action i.clone').bind('click',function(e){
         e.stopPropagation();
-        var xml_id=Number($(this).parent().attr('xml_id')); //路线id
-        var station_num=Number($(this).siblings('th.station_num').text()); //站点个数
-        var language_num=Number($(this).siblings('th.language_num').text()); //语言个数
+        var station_num= Number($(this).parent().siblings('th.station_num').find('span.num').text());
+        if(station_num ==0){
+            var tip= i18next.t('Station_num_err'); //提示信息
+            $('#save_success p.save_tip').text(tip);
+            $('#save_success').stop(true).fadeIn(1);
+            setTimeout(function(){
+                $('#save_success').stop(true).fadeOut(1);
+            },2000);
+            return;
+        };
+        
+        var _this=$(this).parent();
+        $('#show_detail').fadeIn();
+        var clone_route=i18next.t('Clone');
+        $('#show_detail p.myBg span').text(clone_route).attr('data-i18n','Clone');  //更改文件名
+        $('#show_detail .my_inp textarea.xml_description').fadeIn(1).val('')
+        .siblings('input.xml_name').fadeIn(1).val('');
+        var xml_id=_this.parent().attr('xml_id');  //xml对应的id
+        //监听输入文件名框
+        $('#show_detail .my_inp input.xml_name').get(0).oninput=function(e){
+            e.stopPropagation();
+            input_check_fun($(this));
+        }
+        //点击确认按钮
+        $('#show_detail .my_btn button.confirm').unbind('click');
+        $('#show_detail .my_btn button.confirm').bind('click',function(e){
+            e.stopPropagation();
+            var $input_xml=$('#show_detail .my_inp input.xml_name');
+            var filename=$input_xml.val().trim();  //文件名
+            if(!input_check_fun($input_xml))
+                return;
+            //去点原文件名标点符号后的文件名,并转为大写
+            var remove_sysm_filename=XRegExp.replace(filename, XRegExp('\\p{P}?\\p{S}?\\p{Zs}?','g'), (match)=>{
+                return ''
+            }).toUpperCase();
+            var description=$('#show_detail textarea.xml_description').val().trim(); 
+            //请求后台克隆
+            $('#zhezhao').fadeIn(1);
+            $.ajax({
+                url:'/myroute/clone_route',
+                type:'post',
+                data:{
+                    route_id:xml_id,
+                    filename,
+                    description:htmlspecialchars(description),
+                    remove_sysm_filename
+                },
+                success:function(res,status){
+                    if(res.msg=='err'){
+                        window.location.reload();  //重载
+                    }else if(res.msg=='has'){  //表示名称存在
+                        $('#zhezhao').fadeOut(1);
+                        var exist_filename=res.filename;
+                        $('#show_detail .my_inp p.err_tip').text('A similar route name exists:'+exist_filename)
+                        .stop(true).fadeIn();
+                        setTimeout(function(){
+                            $('#show_detail .my_inp p.err_tip').fadeOut();
+                        },3000);
+                    }else if(res.msg=='ok'){
+                        //隐藏对话框
+                        $('#show_detail').fadeOut();
+                        //清空输入框内容
+                        $('#show_detail .my_inp input.xml_name').val('')
+                        $('#show_detail textarea.xml_description').val('');  
+                        var show_num=$('#getData p.info_tip select.showpage').val();
+                        getDataTable(1,show_num,true);
+                    }
+                }
+            });
+        });
+    });
+
+    //点击模拟驾驶车的按钮
+    $('#getDataTable table tbody tr th.action i.sim_drive').unbind('click');
+    $('#getDataTable table tbody tr th.action i.sim_drive').bind('click',function(e){
+        e.stopPropagation();
+        var $this = $(this).parent();
+        var xml_id=Number($this.parent().attr('xml_id')); //路线id
+        var station_num=Number($this.siblings('th.station_num').find('a.edit span.num').text()); //站点个数
+        var language_num=$this.siblings('th.language_num').find('span.language_list').text(); //语言个数
+        language_num = language_num.split(',').length;
         if(station_num <2 || language_num <2){
             var err_tip= i18next.t('Simulated_drive_err');
             $('#save_success p.save_tip').text(err_tip);
@@ -813,7 +997,6 @@ var delt_event=function(){
             }
         });
     });
-
 }
 
 //点击所选中的语言列表删除图标
@@ -831,13 +1014,21 @@ function delete_language(){
 //向后台请求删除语言
 function request_delete_language(jianchen){
     var xml_id=$('#route_info').attr('xml_id');
-    var $stations_th=$('#language_table thead tr th:gt(1)');
-    var stations=[];
-    for(var i=0; i<$stations_th.length; i++){
-        var station_id=$stations_th.eq(i).attr('id');
+    var $stations_tb=$('#language_table tbody tr');
+    var stations=[]; //所有站点
+    for(var i=1; i<$stations_tb.length; i++){
+        var station_id=$stations_tb.eq(i).attr('id');
         stations.push(station_id);
     }
-    $('#myModal').modal('show');
+    var languages_arr = []; //所有语言简称
+    var $languages_choosen=$('#choose_language .language_box li.language');
+    for(var i=0; i<$languages_choosen.length; i++){
+        let language= $languages_choosen.eq(i).find('span').text();
+        if(language!= jianchen){
+            languages_arr.push(language);
+        }
+    };
+    $('#myModal').modal('show').find('.modal-body').fadeOut(1);
     $('#myModal .modal-footer button.confirm').unbind('click');
     $('#myModal .modal-footer button.confirm').bind('click',function(e){
         //$chosen_i.removeClass('route_icon-xuanzhong'); //删除选中样式
@@ -851,7 +1042,8 @@ function request_delete_language(jianchen){
                 jianchen,
                 stations,
                 xml_id,
-                language_num:language_len-1 //语言数目
+                language_num:language_len-1, //语言数目
+                languages_arr:languages_arr.join(',')
             },
             success:function(res){
                 if(res.msg=='ok'){
@@ -869,12 +1061,16 @@ function request_delete_language(jianchen){
                             $language_li.eq(i).find('i.icon').removeClass('route_icon-xuanzhong');//删除选中样式
                         }
                     }
-                    //删除表格中对应语言的行
-                    var $table_body_rows=$('#language_table tbody tr'); //表格body的行数
-                    for(var i=0; i<$table_body_rows.length; i++){
-                        var language=$table_body_rows.eq(i).find('th:eq(0)').text().trim();
+                    //删除表格中对应语言的列
+                    var $table_head_cols=$('#language_table thead tr th'); //表格头部的列数
+                    var $table_body_rows=$('#language_table tbody tr'); //表格的行数
+                    for(var i=1; i<$table_head_cols.length; i++){
+                        var language=$table_head_cols.eq(i).text().trim();
                         if(language ==jianchen){
-                            $table_body_rows.eq(i).remove();
+                            $table_head_cols.eq(i).remove();
+                            for(var j=0; j<$table_body_rows.length; j++){
+                                $table_body_rows.eq(j).find('th').eq(i).remove();
+                            }
                             break;
                         }
                     }
@@ -884,10 +1080,15 @@ function request_delete_language(jianchen){
                     for(var i=0; i<$route_table.length; i++){
                         var route_id=$route_table.eq(i).attr('xml_id');
                         if(route_id ==xml_id){
-                            $route_table.eq(i).find('th.language_num').text(language_len);
+                            var $language_list_ele = $route_table.eq(i).find('th.language_num span.language_list');
+                            $language_list_ele.text(languages_arr.join(','));
+                            languages_arr= languages_arr.join(' ');
+                            $language_list_ele.attr('data-original-title',languages_arr);
                             break;
                         }
                     }
+                    //触发点击Language 的Confirm按钮
+                    $('#route_info .modal-footer button.confirm').trigger('click');
 
                 }else if(res.msg=='err'){
                     window.location=login_url;
@@ -913,12 +1114,16 @@ function all_stations_input(){
     var $table=$('#merge_route_info .modal-body .body_table table');
     for(var i=0; i<$table.length; i++){  //循环表
         var row_num=$table.eq(i).find('tbody tr').length;  //行数
-        var col_num=$table.eq(i).find('thead tr th:gt(1)').length;  //列数
+        var col_num=$table.eq(i).find('thead tr th').length;  //列数
         
-        for(var j=0; j<row_num; j++){  //行
-            for(var k=0; k<col_num; k++){  //列
+        for(var j=1; j<row_num; j++){  //行
+            for(var k=1; k<col_num; k++){  //列
                 //站点的ID
-                var $cell=$table.eq(i).find('tbody tr').eq(j).find('th').eq(k+2);
+                var language = $table.eq(i).find('thead tr th').eq(k).text();
+                if(language == 'en.US'){
+                    continue;
+                }
+                var $cell=$table.eq(i).find('tbody tr').eq(j).find('th').eq(k);
                 let station_id=$cell.attr('station_lang_id').trim();
                 $cell.find('input').get(0).oninput=function(e){
                     e.preventDefault();
@@ -930,11 +1135,11 @@ function all_stations_input(){
                         }else{
                              //非同一个表格
                             var _row_num=$table.eq(m).find('tbody tr').length;  //行数
-                            var _col_num=$table.eq(m).find('thead tr th:gt(1)').length;  //列数
-                            for(var n=0; n<_row_num; n++){  //行
-                                for(var p=0; p<_col_num; p++){  //列
+                            var _col_num=$table.eq(m).find('thead tr th').length;  //列数
+                            for(var n=1; n<_row_num; n++){  //行
+                                for(var p=1; p<_col_num; p++){  //列
                                     //站点的ID
-                                    let $cell_=$table.eq(m).find('tbody tr').eq(n).find('th').eq(p+2);
+                                    let $cell_=$table.eq(m).find('tbody tr').eq(n).find('th').eq(p);
                                     let _station_id=$cell_.attr('station_lang_id').trim();
                                     if(station_id==_station_id){
                                         $cell_.find('input').val(input_val);

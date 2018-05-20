@@ -79,10 +79,14 @@ body{
 /***返回主页**/
 .box1{
     .home{
+        height: 30px;
         margin-left:10px;
         line-height: 30px;
         a.go_back{
 
+        }
+        span.route_name{
+            margin: 0 10px;
         }
         span.save_tip{
             float: right;
@@ -92,6 +96,44 @@ body{
         }
         span.saved{
             color:green;
+        }
+        .expand_style{
+            height: 30px;
+            display: inline-block;
+            position: relative;
+            button{
+                padding-right:20px;
+                position: relative;
+                i.xiala{
+                    position: absolute;
+                    right: 3px;
+                    top:2px;
+                }
+            }
+            ul{
+                display: none;
+                position: absolute;
+                z-index: 3;
+                background-color: #fff;
+                text-align: center;
+                width: 100%;
+                border-radius: 0 0 4px 4px;
+                box-shadow: 0 0 12px rgba(0, 0, 0, .175);
+                li{
+                    cursor: pointer;
+                    &:hover{
+                        background:#f5f5f5;
+                    }
+                }
+                li.active{
+                    background: rgba(255, 255, 0, 0.4);
+                }
+            }
+            &:hover{
+                ul{
+                    display:block;
+                }
+            }
         }
     }
 }
@@ -117,6 +159,7 @@ body{
         top:0;
         left:0;
         position: absolute;
+        z-index: 1;
         i.shensuo{
             position: absolute;
             z-index:2;
@@ -152,11 +195,16 @@ body{
         box-sizing:border-box;
         height:50%;
         border-bottom:1px solid #777;
+        p.chosen_station_title{
+            button.reverse,button,all_stations_show{
+                float:right;
+                margin-right:7px;
+            }
+        } 
         .contain_box{
             background: #f5f5f5;
             height: 100%;
             padding-top:30px;
-            padding-bottom:30px;
             box-sizing:border-box;
             overflow-y:auto;
             &::-webkit-scrollbar{
@@ -188,19 +236,28 @@ body{
             }
         }
     }
+
     #chosen_stations{
         ul.stations_lists{
             li.stations_list{
                 position: relative;
+                vertical-align: middle;
                 span.station_num{
                     display: inline-block;
                     text-align: left;
                     width: 50px;
                 }
-                button.station_city{
-                    position: absolute;
-                    bottom:0;
-                    right:40px;
+                span.station_name,span.station_city{
+                    display: inline-block;
+                    width: 38%;
+                    white-space: nowrap;
+                    overflow-x: hidden;
+                    text-overflow: ellipsis;
+                    vertical-align: middle;
+                }
+                span.station_city{
+                    box-sizing: border-box;
+                    padding-right: 20px;
                 }
                 i.route_icon-shanchu{
                     position: absolute;
@@ -220,44 +277,7 @@ body{
         }
     }
     #marked_stations{
-        /* ul.mark_stations_lists{
-            li.mark_stations_list{
-                position: relative;
-                line-height:50px;
-                padding:0 30px 0 10px;
-                cursor: pointer;
-                float: left;
-                background:#337ab7;
-                margin-left:5px;
-                margin-top:5px;
-                border-radius:8px;
-                &:hover{
-                    color: black;
-                    background:yellow;
-                }
-                i{
-                    position: absolute;
-                    right:0px;
-                    bottom:-16px;
-                    color: #222;
-                    &:hover{
-                        color: red;
-                    }
-                }
-                i.route_icon-iconfontadd{
-                    bottom:16px;
-                    &:hover{
-                        color: green;
-                    }
-                }
-            }
-            li.marker_hover{
-                background:#7c7c76;
-                &:hover{
-                    background:#7c7c76;
-                }
-            }
-        } */
+        height: 100%;
         p.err_tip{
             display: none;
             top:40px;
@@ -270,11 +290,13 @@ body{
             text-indent: 16px;
         }
         .search_data{
-            position: relative;
+            position: absolute;
+            width:98%;
             height: 34px;
             margin-top:2px;
-            padding:0 10px 0 10px;
-            box-sizing: border-box;
+            top:30px;
+            left:1%;
+            z-index: 1;
             input.filter{
                 padding-top:3px; padding-bottom:3px; padding-right:41px;
                 height:30px;
@@ -301,13 +323,20 @@ body{
                 }
             }
         }
+        .data_box{
+            position: relative;
+            box-sizing: border-box;
+            height: 100%;
+            overflow-y:auto;
+            padding-top: 64px;
+        }
         table#company_stations{
             width:98%;
             table-layout: fixed;
             font-size:14px;
             thead tr{
                 th:nth-child(1){
-                    width: 5%;
+                    width: 7%;
                 }
                 th:nth-child(2){
                     width: 20%;
@@ -316,7 +345,7 @@ body{
                     width: 32%;
                 }
                 th:nth-child(5){
-                    width: 16%;
+                    width: 78px;
                 }
             }
             thead tr th{
@@ -344,7 +373,15 @@ body{
                         }
                     }
                     i.add{
-                        left:2px;
+                        /* left:2px; */
+                        left : 50%;
+                        margin-left:-8px;
+                        &:hover{
+                            background: green;
+                        }
+                    }
+                    i.edit{
+                        right:2px;
                         &:hover{
                             background: green;
                         }
@@ -359,47 +396,28 @@ body{
                 tr.chosen{
                     background-color: rgba(255, 255, 0, 0.4);
                 }
-            }
-            tbody tr td.station_name{
-                text-overflow: ellipsis;
-                overflow: hidden;
-                white-space: nowrap;
-            }
-        }
-        #pageShow .Page{
-            float:left;
-            margin-left:10px;
-            margin-top:10px;
-            a{
-                position: relative;
-                color: #337ab7;
-                padding: 6px 12px;
-                margin-left: -1px;
-                line-height: 1.42857143;
-                border: 1px solid #ddd;
-                background-color: #fff;
-                &:hover{
-                    z-index: 2;
-                    color: #23527c;
-                    background-color: #eee;
-                    border-color: #ddd;
+                tr.draggable{
+                    background-color: green;
                 }
             }
-            a.active{
-                z-index: 3;
-                color: #fff;
-                background-color: #337ab7;
-                border-color: #337ab7;
+            tbody tr {
+                td.index{ text-align:right;}
+                td.station_city,td.station_name,td.station_addr{
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                }
+                td.filter{
+                    background-color: rgba(0, 0, 255, 0.2);
+                }
             }
-            a:first-child{
-                border-radius:5px 0 0 5px;
-            }
-            a:last-child{
-                border-radius:0 5px 5px 0;
-            }
+            /**默认隐藏经纬度这栏**/
+            thead tr th.postion{ display: none;}
+            tbody tr td.station_addr{ display: none;}
         }
     }
 }
+/**地图地址搜索**/
 /**地图地址搜索**/
 #latlng_search{
     .latlng_search{
@@ -428,6 +446,13 @@ body{
         box-shadow: 0 0 8px #999;
     }
 }
+/* #place_input{
+    width:30%;
+    margin-top:10px;  
+    position: absolute;
+    left:119px;
+    z-index:2; 
+} */
 #jingweidu_search{
     position: absolute;
     width:30%;
@@ -572,6 +597,31 @@ body{
     }
 }
 
+/**编辑公司站点站点名和经纬度**/
+#edit_company_stations{
+    .modal-body{
+        input.lat_lng{
+            margin-top:10px;
+        }
+        p.err_tip{
+            display: none;
+            font-size:12px;
+            line-height:24px;
+            color:red;
+            background:#fff;
+            padding:5px;
+            box-shadow: 0 0 8px #999;
+        }
+        p.add_mark_tip{
+            margin-top:10px;
+            width:100%;
+            line-height:30px;
+            background:yellow;
+            text-indent:16px;
+        }
+    }
+}
+
 /**自动保存提示**/
 #save_success{
     display: none;
@@ -590,12 +640,33 @@ body{
         color:#fff;
     }
 }
-
+/***自定义滚动条***/
+.my_diy_scrollbar{
+    /**自定义滚动条**/
+    &::-webkit-scrollbar-track
+    {
+        box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        background-color: #F5F5F5;
+        border-radius:5px;
+    }
+    &::-webkit-scrollbar
+    {
+        width: 8px;
+        height:8px;
+        background-color: #F5F5F5;
+    }
+    &::-webkit-scrollbar-thumb
+    {
+        background-color: #000000;
+        border: 2px solid #555555;
+        border-radius:5px;
+    }
+}
 /***遮罩层样式******/
 #zhezhao{
     display: none;
     position:absolute;
-    z-index:1000;
+    z-index:1051;
     width:100%;
 	height:100%;
 }

@@ -16,25 +16,6 @@ body{
 /**鼠标覆盖背景颜色***/
 @bgColor:rgba(222, 200, 20, 0.5);
 
-#contact_us{
-    position: fixed;
-    top:30%;
-    left:0;
-    z-index: 3;
-    i.yidong{
-        position: absolute;
-        background:rgba(0,0,0,0.8);
-        color:white;
-        right:-7px;
-        border-radius:50%;
-        cursor: pointer;
-        &:hover{
-            border: 1px solid white;
-            box-shadow: 0 0 5px black;
-        }
-    }
-}
-
 .outerbox{
     position: relative;
     z-index:2;
@@ -96,7 +77,20 @@ body{
         }
         
     }
-  
+    /**版本号**/
+    div.banben{
+        height: 40px;
+        float: right;
+        color: white;
+        margin-right: 20px;
+        line-height: 40px;
+    }
+}
+button.go_company{
+    a.go_company{
+        color:white;
+        display:block;
+    }
 }
 
 /***头部按钮及磁盘空间***/
@@ -155,8 +149,8 @@ body{
         }
         input.search{
             position:absolute;
-            right:55px;
-            top:-5px;
+            right:15px;
+            top:1px;
             height:31px;
             box-sizing:border-box;
             text-indent:10px;
@@ -173,7 +167,7 @@ body{
         }
         i.fanhui,i.route_icon-sousuo{
             position: absolute;  
-            top:2px;
+            top:6px;
             cursor:pointer;
             &:hover{
               font-weight: bolder;
@@ -182,11 +176,11 @@ body{
           /**叉叉  返回**/
           i.fanhui{
             display: none;
-            right: 83px;
+            right: 40px;
           }
           /**搜索**/
           i.route_icon-sousuo{
-            right:65px;  
+            right:25px;  
           }
     }
 }
@@ -197,6 +191,7 @@ body{
     tr th{
         font-weight:normal;
         text-align:center;
+        vertical-align:middle;
     }
     thead tr th:nth-child(1){
         width:40px;
@@ -207,7 +202,9 @@ body{
     thead tr th:nth-child(3),thead tr th:nth-child(4),thead tr th:nth-child(5){
         min-width:250px;
     }
+    thead tr th.action{ width: 120px;}
     tbody tr{
+        th.index{ text-align:right;}
         th:nth-child(1),th:nth-child(2),th:nth-child(3),th:nth-child(6),
         th:nth-child(7),th:nth-child(8),th:nth-child(9),th:nth-child(10),
         th:nth-child(11),th:nth-child(12),th:nth-child(13){
@@ -216,16 +213,32 @@ body{
         th{
             line-height: 42px;
         }
-        th i:hover{
-            cursor: pointer;
+        th a{ color: black;}
+        th.click_choose .border_box_check i:hover{
+            font-weight: normal;
             color: #337ab7;
+            border:none;
+            box-shadow:none;
         }
+        th.action i.delete{
+            &:hover{ color: red; }
+        }
+    }
+    tbody tr th.station_num{
+        a.jump{
+            &:hover{
+                color:green;
+            }
+        }
+    }
+    tbody tr.merge{
+        background-color: #e5e5e5;
     }
     tbody tr.chosen{
         background-color: rgba(255,255,0,0.4);
     }
     thead tr{
-        th.station_num,th.language_num,th.edit,th.route_info,th.delete{
+        th.station_num,th.edit,th.route_info,th.clone,th.delete{
             width:7%;
             min-width:115px;
         }
@@ -249,13 +262,80 @@ body{
                 }
             }
         }
-        th.delete:hover{
-            i{
-                color:red;
+        th.language_num{
+            position: relative;
+            cursor: pointer;
+            span.language_list{
+                display:inline-block;
+                width:100%;
+                overflow: hidden;
+                white-space:nowrap;
+                text-overflow:ellipsis;
+                line-height:20px;
+            }
+            span.info{
+                display:inline-block;
+                position: absolute;
+                width:16px; height: 16px;
+                bottom:3px;
+                left:50%;
+                line-height: 16px;
+                &:hover{
+                    border-radius: 50%;
+                    border: white;
+                    box-sizing: border-box;
+                    box-shadow: 0 0 5px black;
+                    color: #337ab7;   
+                }
             }
         }
+        th.action{
+            position:relative;
+            i{ 
+                width: 20px; height: 20px; position:absolute; top:50%; margin-top:-8px;
+                line-height:21px;
+            }
+            i:hover{
+                font-weight: bolder;
+                cursor: pointer;
+                color: #337ab7;
+                border-radius: 50%;
+                border: 1px solid white;
+                box-sizing: border-box;
+                box-shadow: 0 0 5px black;
+            }
+            i.clone{ left:3px;}
+            a.xiazai{
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                left:35%;
+                top:50%;
+                margin-top:-10px;
+                margin-left:-10px;
+                i{ left:0px;}
+                i.noclick{
+                    display:none;
+                }
+                span.need_update{
+                    position: absolute;
+                    left: 19px;
+                    top: 20px;
+                    color: red;
+                    line-height: 7px;
+                    display: none;
+                }
+                span.need_update.fadein{
+                    display: block;
+                }
+            }
+            i.sim_drive{
+                left:58%;
+            }
+            i.delete{ right:3px;}
+        }
     }
-    tbody tr th:nth-child(2) .border_box_check{
+    tbody tr th.click_choose .border_box_check{
         width:16px; height:16px;
         cursor: pointer;
         margin-top:11px;
@@ -267,6 +347,15 @@ body{
             font-size:20px;
             color:#337ab7;
             font-weight:bold;
+        }
+    }
+    /**表格内容对齐原则,
+     * 基本上文字都是要靠左排，數字都是靠右
+     * 如果每筆數據的內容長度全都一樣，那就可以置中
+    **/
+    tbody tr{
+        th.filename,th.description{
+            text-align:left;
         }
     }
 }
@@ -366,11 +455,12 @@ body{
             text-indent:32px;
             border-radius:5px;
             width:100%;
-            height:75px;
-            max-height:120px;
+            height: auto;
+            /* max-height:120px; */
             resize:vertical;
             padding:5px;
             color: #555;
+            overflow-y: hidden;
         }
         button{
             float: right;
@@ -389,6 +479,12 @@ body{
     .modal-body .waring_info{
         display: none;
     }
+    .modal-footer{
+        .submit_waring,.submit_success{
+            display: none;
+            text-align:left;
+        }
+    } 
     .body_language{
         .language_box{
             overflow-x:auto;
@@ -420,12 +516,15 @@ body{
     }
     .body_table{
         overflow-x: auto;
+        table-layout: fixed;
         table{
             min-width:1300px;
             border-radius:6px; 
             tr th{
+                width: 90px;
                 font-weight:normal;
                 text-align:center;
+                vertical-align: middle;
                 input{
                     color:#000;
                 }

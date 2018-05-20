@@ -111,8 +111,7 @@ var countries={
 
 };
 
-var server_ip = '106.15.204.40:55566';  //服务器地址
-//var server_port = '55566';  //服务端监听端口
+var server_ip = 'localhost:55566';  //台北cloud地址
 
 module.exports={
     login_url,

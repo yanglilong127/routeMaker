@@ -35,8 +35,24 @@
             </div>
         </div>
         <div class="home">
-            <span>>> <a href="" class="go_back" data-i18n="home">home</a></span>
+            <span data-i18n='Route_name'></span>:
+            <span class="route_name"></span>
+            <button class="btn btn-sm btn-primary go_back" data-i18n='home'></button>
+            <button class="btn btn-sm btn-primary go_company_station_manage" data-i18n='CompanyStationManage'></button>
+            <button class="btn btn-sm btn-primary confirm" data-i18n='Save'></button>
             <span class="save_tip saved"></span>
+            <!--展开方式-->
+            <div class="expand_style">
+                <button class="btn btn-sm btn-default">
+                    <span data-i18n='Expansion_style'></span>
+                    <i class="icon route_iconfont route_icon-icon-test xiala"></i>
+                </button>
+                <ul index='1'>
+                    <li class="" data-i18n='Expand_all'></li>
+                    <li class="active" data-i18n='Expand_part'></li>
+                    <li class="" data-i18n='Hide'></li>
+                </ul>
+            </div>
         </div>
         <div id="container">
             <div class="contain_left">
@@ -44,7 +60,8 @@
                 <div class="contain_left_top">
                     <p class="chosen_station_title">
                         <span data-i18n='Chosen_station'></span>
-                        <i class="icon route_iconfont route_icon-zuo shensuo"></i>
+                        <button class="btn btn-primary btn-sm reverse" data-i18n='Reverse'></button>
+                        <button class="btn btn-primary btn-sm all_stations_show" data-i18n='All_stations_show'></button>
                     </p>
                     <div id="chosen_stations" class="contain_box">
                         <ul class="stations_lists">
@@ -57,30 +74,34 @@
                             </li> -->
                         </ul>
                     </div>
-                    <div class="confirm_box">
+                   <!--  <div class="confirm_box">
                         <button class="btn btn-sm btn-primary confirm" data-i18n='Save'></button>
-                    </div>  
+                    </div>   -->
                 </div>
                 <!--作标记的站点-->
                 <div class="contain_left_bottom">
-                    <p class="chosen_station_title" data-i18n='Company_station'></p>
+                    <p class="chosen_station_title">
+                        <span data-i18n='Company_station'></span>
+                        <span>:</span>
+                        <span id='search_station_numbers' class="numbers">0</span>
+                    </p>
                     
-                    <div id="marked_stations" class="contain_box">
+                    <div id="marked_stations">
                         <p class="err_tip" data-i18n='station_chosen'></p>
-                        <div class="data_box">
-                            <div class="search_data">
-                                <input type="text" class="form-control filter" data-i18n="Station_name">
-                                <i class="icon route_iconfont route_icon-chuyidong clear_text"></i>
-                                <i class="icon route_iconfont route_icon-sousuo serach"></i>
-                            </div>
+                        <div class="search_data">
+                            <input type="text" class="form-control filter" data-i18n="Search">
+                            <i class="icon route_iconfont route_icon-chuyidong clear_text"></i>
+                            <i class="icon route_iconfont route_icon-sousuo serach"></i>
+                        </div>
+                        <div class="data_box my_diy_scrollbar">
                             <table id="company_stations" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th data-i18n="Station_city"></th>
                                         <th data-i18n="Station_name"></th>
-                                        <th data-i18n="Lat_lng"></th>
-                                        <th data-i18n="Operation"></th>
+                                        <th class='postion' data-i18n="Lat_lng"></th>
+                                        <th data-i18n="Action"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -94,27 +115,16 @@
                                         <td class="action">
                                             <i class="icon route_iconfont route_icon-iconfontadd add"></i>/
                                             <i class="icon route_iconfont route_icon-shanchu delete"></i>
+                                            <i class="icon route_iconfont route_icon-bianji1 edit"></i>
                                         </td>
                                     </tr> -->
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="5">No Data</th>
+                                        <th colspan="4">No Data</th>
                                     </tr>
                                 </tfoot>
                             </table>
-                            <!--分页显示部分-->
-                            <div id="pageShow">
-                                <div class="info_show">
-                                    <span data-i18n='numbers'></span>: <span class="total">0</span>,
-                                    <span data-i18n='pages'></span>: <span class="totalPages">0</span>,
-                                    <span data-i18n='currentPage'></span>: <span class="currPage">1</span>
-                                </div>
-                                <!--上下页-->
-                                <div class="Page">
-                                    
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -202,17 +212,41 @@
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
         </div>
-        <!--模态框，查看站点所在城市名-->
-        <div id='myModal_show_cityName' class="modal fade" tabindex="-1" role="dialog">
+        <!--模态框，编辑公司站点站点名和经纬度-->
+        <div id='edit_company_stations' class="modal fade" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" data-i18n='detail_address'></h4>
+                        <h4 class="modal-title" data-i18n='Edit_station'></h4>
                     </div>
-                    <div class="modal-body"></div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control station_name" data-i18n='Station_name' placeholder="">
+                        <input type="text" class="form-control lat_lng" data-i18n='long_latitude' placeholder="">
+                        <p class="err_tip"></p>
+                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n='Close'></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n='Confirm'></button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div>
+
+        <!--模态框，是否确定返回主页-->
+        <div id='myModal_gohome' class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n='ConfirmLeave'></h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="err_tip"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n='No'></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n='Yes'></button>
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->

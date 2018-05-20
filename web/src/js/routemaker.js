@@ -18,20 +18,47 @@ import {login_url} from '../configs/setting.js'; //cloud登录地址
 import {input_check_fun} from './pagination'; //输入框名字
 import {login_check,login_out} from './authmyid';  //验证登录的功能
 import {draw_line} from './marker_drag';
-import {Company_station} from './company_station_pagination';
+import {Company_station,click_station_delete} from './company_station_pagination';
 login_check();
-
 login_out();  //登出按钮操作
 
 var url=window.location.href;
+var route_name = decodeURI(parseQueryString(url).route_name);  //路线名
+$('.box1 .home span.route_name').text(route_name);
 //返回主页的连接地址
 var home_addr=url.replace('/html/routeMaker.html','/index.html').split('&xml_id=')[0];
-$('.box1 .home a.go_back').attr('href',home_addr);
+//返回公司站点管理页地址
+var company_station_addr=url.replace('/routeMaker.html','/companyStation.html').split('&xml_id=')[0];
+$('.box1 .home').find('button.go_back,button.go_company_station_manage').click(function(e){ //返回主页
+    e.stopPropagation();
+    if($('.box1 .home span.save_tip').hasClass('saved')){   //保存过了，即未做修改
+        if($(this).hasClass('go_back')){
+            window.location = home_addr;
+        }else{
+            window.location = company_station_addr;
+        }
+    }else{
+        var save_tip = i18next.t('Not_save_tip');
+        $('#myModal_gohome').modal('show');  //模态框显示
+        $('#myModal_gohome .modal-body p.err_tip').text(save_tip);
+        //点击确定
+        $('#myModal_gohome .modal-footer button.confirm').unbind('click');
+        $('#myModal_gohome .modal-footer button.confirm').bind('click',function(e){
+            e.stopPropagation();
+            if($(this).hasClass('go_back')){
+                window.location = home_addr;
+            }else{
+                window.location = company_station_addr;
+            }
+        });
+    }
+});
+
 url=parseQueryString(url);
 var company_id=Number(url.uid);  //公司id
 var xml_id=url.xml_id;  //xml+id值
 //模态框，是否添加标记,初始化模态框
-$('#myModal,#myModal_show_cityName').modal({
+$('#myModal,#edit_company_stations,#myModal_gohome').modal({
     show:false
 });
 //模态框标记名输入框检测
@@ -72,73 +99,25 @@ function map_reset(){  //地图重新画
         rotateControl: true,
         scaleControl: true
     });
-    //地址搜索控件
     window.clearMarkers_clusterer(window.markers);
     draw_line(); //重新画线
 }
-//点击<向左伸进按钮
-$('#container .contain_left_top p i.shensuo').click(function(e){
-    e.stopPropagation();
-    var _this=$(this);
-    if($(this).hasClass('route_icon-zuo')){  //隐藏
-        $('#container .contain_left').stop(true).animate({width:'0%'},1500)
-        .siblings('#google_map_box').stop(true).animate({width:'100%'},1500,function(){
-            _this.removeClass('route_icon-zuo').addClass('route_icon-you zhankai');
-
-            map_reset();
-        });
-    }else{
-        $('#google_map_box').stop(true).animate({width:'70%'},1500)
-        .siblings('.contain_left').stop(true).animate({width:'30%'},1500,function(){
-            _this.removeClass('route_icon-you zhankai').addClass('route_icon-zuo');
-
-            map_reset();
-        });
-    }
-});
-
 
 window.my_company_stations= new Company_station();
+window.my_company_stations.get_route_stations();
 window.my_company_stations.get_company_station()
-.then(function(){
-    window.my_company_stations.get_route_stations();
+.then(function(getData){
+    //添加公司下所有站点数据
+    my_company_stations.add_all_stations(getData);
 },function(msg){
-    console.log(msg);
+    $('#zhezhao').fadeOut(1);
 });
 
-//表格搜索输入框输入内容
-$('#marked_stations .search_data input.filter').get(0).oninput=function(e){
-    e.preventDefault();
-    var inp_val=$(this).val().trim();
-    if(inp_val){  //有内容
-        $('#marked_stations .search_data i.clear_text').fadeIn(1);
-    }else{
-        $('#marked_stations .search_data i.clear_text').fadeOut(1);
-        var curPage=Number($('#pageShow .info_show span.currPage').text());
-        window.my_company_stations.get_company_station();
-    }
-};
-//点击表格输入框叉叉
-$('#marked_stations .search_data i.clear_text').click(function(e){
-    e.stopPropagation();
-    $('#marked_stations .search_data input.filter').val('');
-    $('#marked_stations .search_data i.clear_text').fadeOut(1);
-    window.my_company_stations.get_company_station();
-});
-//点击表格中的搜索图标按钮
-$('#marked_stations .search_data i.serach').click(function(e){
-    e.stopPropagation();
-    var inp_val=$('#marked_stations .search_data input.filter').val().trim();
-    if(inp_val){
-        window.my_company_stations.get_company_station(my_company_stations.nums_limit,1, inp_val);
-    }
-});
-
-//点击经纬度搜索按钮
+//点击搜索按钮
 $('#jingweidu_search i.sosuo').click(function(e){
-    e.stopPropagation();
     $('#place_search_form').submit();//表单提交
 });
+
 //经纬度搜索表单提交
 $('#place_search_form').submit(function(e){
     e.preventDefault();  //阻止对表单的提交
@@ -191,8 +170,8 @@ $('#place_search_form').submit(function(e){
         }
     };
     operate_map.add_company_mark_repeat(company_id,latLng,window.company_markers);
-   
 });
+
 //点击地名搜索
 $('#latlng_search .latlng_search i.sosuo').click(function(e){
     e.stopPropagation();
@@ -201,7 +180,7 @@ $('#latlng_search .latlng_search i.sosuo').click(function(e){
 
 var Is_auto_save=false;  //是否是自动保存
 //点击保存按钮
-$('#container .contain_left_top .confirm_box button.confirm').click(function(e){
+$('.box1 .home button.confirm').click(function(e){
     e.stopPropagation();
     var send_data=[];  //发送的数据
     var $choose_station=$('#chosen_stations ul.stations_lists li.stations_list');
@@ -256,10 +235,19 @@ $('#container .contain_left_top .confirm_box button.confirm').click(function(e){
                 for(var i=0; i<window.company_markers.length; i++){
                     let origin_station_id = window.company_markers[i].origin_station_id;
                     let station_id = window.company_markers[i].station_id;
+                    let latLng = window.company_markers[i].getPosition();
+                    let myLatLng = {
+                        lat: parseInt(latLng.lat()*1000000)/1000000,
+                        lng: parseInt(latLng.lng()*1000000)/1000000,
+                    }
+                    //console.log(latLng,myLatLng)
                     for(var j=0; j<$table_tr.length; j++){
                         let _station_id = $table_tr.eq(j).attr('station_id');
                         if(origin_station_id == _station_id){
                             $table_tr.eq(j).attr('station_id',station_id);
+                            $table_tr.eq(j).find('td.station_addr')
+                            .attr('title',myLatLng.lat+','+myLatLng.lng)
+                            .text(myLatLng.lat+'\/'+myLatLng.lng);
                             break;
                         }
                         
@@ -294,3 +282,85 @@ setInterval(function(){
     Is_auto_save = true;
     $('#container .contain_left_top .confirm_box button.confirm').trigger('click');
 },600*1000);
+
+//点击展开方式
+$('.box1 .home .expand_style ul li').click(function(e){
+    $(this).addClass('active').siblings().removeClass('active');
+    var li_index= $(this).index();
+    //展开方式默认为序号1
+    var expand_style_index = Number($(this).parent().attr('index'));
+    $(this).parent().attr('index',li_index);
+    if(li_index == 0){ //展开所有栏位
+        $('#container .contain_left').css('opacity','1');
+        $('#company_stations tfoot tr th').attr('colspan','5');
+        if(expand_style_index == 1){  //之前是隐藏了position
+            $('#company_stations thead tr th.postion').fadeIn(1);
+            $('#company_stations tbody tr td.station_addr').fadeIn(1);
+        }else if(expand_style_index == 2){  //之前是全部收缩
+            $('#google_map_box').stop(true).animate({width:'70%'},1500)
+            .siblings('.contain_left').stop(true).animate({width:'30%'},1500,function(){
+                map_reset();
+            });
+        }
+    }else if(li_index == 1){ //展开部分，但是position隐藏
+        $('#container .contain_left').css('opacity','1');
+        $('#company_stations tfoot tr th').attr('colspan','4');
+        $('#company_stations thead tr th.postion').fadeOut(1);
+        $('#company_stations tbody tr td.station_addr').fadeOut(1);
+        if(expand_style_index == 2){  //之前是全部收缩
+            $('#google_map_box').stop(true).animate({width:'70%'},1500)
+            .siblings('.contain_left').stop(true).animate({width:'30%'},1500,function(){
+                map_reset();
+            });
+        }
+    }else if(li_index == 2){ //全部收缩
+        $('#company_stations tfoot tr th').attr('colspan','5');
+        $('#container .contain_left').stop(true).animate({width:'0%'},1500)
+        .siblings('#google_map_box').stop(true).animate({width:'100%'},1500,function(){
+            $('#container .contain_left').css('opacity','0');
+            map_reset();
+        });
+        if(expand_style_index == 1){  //展开部分，但是position隐藏
+            $('#company_stations thead tr th.postion').fadeIn(1);
+            $('#company_stations tbody tr td.station_addr').fadeIn(1);
+        }
+    }
+});
+
+//点击Reserve反向按钮
+$('#container .contain_left_top button.reverse').click(function(e){
+    e.stopPropagation();
+    var $choose_station = $("#chosen_stations ul");
+    var stationsArray = $("#chosen_stations ul li.stations_list");
+    $choose_station.empty();  //清空
+    stationsArray.sort(function(a,b){  //反向排序
+        return 1;
+    }).appendTo($choose_station);
+    //将里面的数字序号修改正确
+    for(var i=0; i<$choose_station.find('li').length; i++){
+        var $li=$choose_station.find('li').eq(i);
+        var station_index = i+1;
+        if(station_index >999){
+            station_index = 999 + '+';
+        }
+        $li.find('span.station_num').text(station_index);
+    }
+    draw_line();  //重新画线
+    click_station_delete();  //使之能重新点击事件恢复
+    //通知为未保存状态
+    var save_val=i18next.t('UnSaved');
+    $('.home span.save_tip').removeClass('saved')
+    .attr('data-i18n','UnSaved')
+    .text(save_val);
+});
+
+//点击All stations show按钮，使所有站点都显示在地图上
+var bounds=new google.maps.LatLngBounds();  //缩放对象
+$('#container .contain_left_top button.all_stations_show').click(function(e){
+    e.stopPropagation();
+    //设置最佳缩放级别
+    for (var i=0; i<window.markers.length; i++) {  
+        bounds.extend (window.markers[i].getPosition()); 
+    }  
+    window.map.fitBounds (bounds);
+});

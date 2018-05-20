@@ -7,14 +7,6 @@
     <title>routeMaker</title>
 </head>
 <body>
-
-    <div id="contact_us">
-        <i class="icon route_iconfont route_icon-chuyidong yidong"></i>
-        <a target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=342063120&site=qq&menu=yes">
-            <img src="/myroute/images/qq_contact.png" title="contact with me" class="contact_img">
-        </a>
-    </div>
-
     <div class="outerbox">
         <!--导航条-->
         <div id="navigation">
@@ -40,6 +32,11 @@
                     <li data-i18n='simplified_chinese' val='zh_CN'></li>
                     <li data-i18n='traditional_chinese' val='zh_TW'></li>
                 </ul>
+            </div>
+            <!--搜索框-->
+            <div class='banben'>
+                <span>在线人数: </span>
+                <span class="online_num">0</span>
             </div>
         </div>
     
@@ -68,8 +65,8 @@
                 </div>
             </div>
         </div> -->
-        <hr>
-
+        <hr style='margin:5px 0 0px 0;'>
+        <!-- <hr style='margin:5px 0 5px 0;'> -->
         <!--表格部分-->
         <div id="getData">
             <p class='info_tip'>
@@ -80,9 +77,12 @@
                     <option value="50">50</option>
                     <option value="100">100</option>
                 </select>
-                <span data-i18n='per_page'></span>
+                <span data-i18n='Entries'></span>
                 <button class="btn btn-primary btn-xs new_route" data-i18n='new_route'></button>
                 <button class="btn btn-primary btn-xs merge" data-i18n='merge_route'></button>
+                <button class="btn btn-primary btn-xs go_company">
+                    <a href="#" class="go_company" data-i18n='CompanyStationManage'></a>
+                </button>
                 <!--搜索框-->
                 <input type="text" data-i18n='route_name' placeholder="" class="search">
                 <i class="icon route_iconfont route_icon-sousuo"></i>
@@ -93,17 +93,16 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th data-i18n='Chosen'></th>
+                            <th data-i18n='Select'></th>
                             <th data-i18n='route_name'></th>
+                            <th data-i18n='Description'></th>
+                            <th data-i18n='Stops' class="station_num"></th>
+                            <th data-i18n='Languages' class="language_num"></th>
                             <th data-i18n='CreateTime'></th>
                             <th data-i18n='ModifyTime'></th>
-                            <th data-i18n='Description'></th>
-                            <th data-i18n='StationNum' class="station_num"></th>
-                            <th data-i18n='Languages' class="language_num"></th>
-                            <th data-i18n='Edit' class="edit"></th>
-                            <th data-i18n='RouteInfo' class="route_info"></th>
-                            <th data-i18n='Simulated_driving' class="route_drive"></th>
-                            <th data-i18n='Delete' class="delete"></th>
+                            <th data-i18n='Action' class="action"></th>
+                            <!-- <th data-i18n='Clone' class="clone"></th>
+                            <th data-i18n='Delete' class="delete"></th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -114,7 +113,7 @@
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th class="info" colspan="12" data-i18n='NoData'>
+                            <th class="info" colspan="9" data-i18n='NoData'>
                             </th>
                         </tr>
                     </tfoot>
@@ -124,9 +123,12 @@
             <!--分页显示部分-->
             <div id="pageShow">
                 <div class="info_show">
-                    <span data-i18n='numbers'></span>: <span class="total">0</span>,
+                    <span data-i18n='Show'></span> <span class="from_num">0</span>
+                    <span data-i18n='To'></span> <span class="to_num">0</span>
+                    <span data-i18n='Of'></span> <span class="total">0</span> <span data-i18n='Entries'></span>
+                    <!-- <span data-i18n='numbers'></span>: <span class="total">0</span>,
                     <span data-i18n='pages'></span>: <span class="totalPages">0</span>,
-                    <span data-i18n='currentPage'></span>: <span class="currPage">1</span>
+                    <span data-i18n='currentPage'></span>: <span class="currPage">1</span> -->
                 </div>
                 <!--上下页-->
                 <div class="Page">
@@ -146,7 +148,7 @@
             </p>
             <div class="my_inp">
                 <input type="text" class="form-control xml_name" data-i18n='route_name' placeholder="">
-                <textarea name="" class="xml_description" data-i18n='Add_description' placeholder=""></textarea>
+                <textarea name="" class="xml_description my_diy_scrollbar" data-i18n='Add_description' placeholder=""></textarea>
                 <p class="err_tip"></p>
             </div>
             <div class="my_btn">
@@ -176,6 +178,7 @@
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         <h4 class="modal-title" data-i18n='ConfirmDelete'></h4>
                     </div>
+                    <div class="modal-body"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n='Close'></button>
                         <button type="button" class="btn btn-primary confirm" data-i18n='Confirm'></button>
@@ -219,7 +222,6 @@
                                 <thead>
                                     <tr>
                                         <th data-i18n='Language'></th>
-                                        <th data-i18n='Route_name'></th>
                                         <!-- <th>Station 1</th>
                                         <th>Station 2</th>
                                         <th>Station 3</th>
@@ -227,6 +229,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    <tr>
+                                        <th data-i18n='Route_name'></th>
+                                    </tr>
                                     <!-- <tr>
                                         <th>es.ES</th>
                                         <th>KKBus_Route1</th>
@@ -250,12 +255,17 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary confirm" data-i18n='Confirm'></button>
-                        <button type="button" class="btn btn-default disabled download">
+                        <!--翻译填写完整信息提示框-->
+                        <div class="alert alert-danger submit_waring" ></div>
+                        <!--保存成功信息提示框-->
+                        <div class="alert alert-success submit_success" ></div>
+                        <button type="button" class="btn btn-primary save" data-i18n='Save'></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n='Generator'></button>
+                        <!-- <button type="button" class="btn btn-default disabled download">
                             <a href="">
                                 <i class="icon route_iconfont route_icon-comiisxiazai"></i>
                             </a>
-                        </button>
+                        </button> -->
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->
@@ -278,17 +288,23 @@
                             </button>
                             <p class="tip_info"></p>
                         </div>
+                        <!--容纳多张表格的容器-->
                         <div class="body_table my_diy_scrollbar">
                             
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary confirm" data-i18n='Confirm'></button>
-                        <button type="button" class="btn btn-default disabled download">
+                        <!--翻译填写完整信息提示框-->
+                        <div class="alert alert-danger submit_waring" ></div>
+                        <!--保存成功信息提示框-->
+                        <div class="alert alert-success submit_success" ></div>
+                        <button type="button" class="btn btn-primary save" data-i18n='Save'></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n='Generator'></button>
+                        <!-- <button type="button" class="btn btn-default disabled download">
                             <a href="" download="">
                                 <i class="icon route_iconfont route_icon-comiisxiazai"></i>
                             </a>
-                        </button>
+                        </button> -->
                     </div>
                 </div><!-- /.modal-content -->
             </div><!-- /.modal-dialog -->

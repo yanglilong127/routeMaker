@@ -11,43 +11,43 @@ var api_url= 'http://ditu.google.cn/maps/api/geocode/json?';
 function search_place(latlng,language='EN'){
     var lat = latlng.lat; //纬度
     var lng = latlng.lng; //经度
-
-    var detail_address; //详细地址
+    var detail_address=''; //详细地址
     return new Promise(function(resolve,reject){
         $('#zhezhao').fadeIn(1);
-        $.ajax({
-            url : api_url +"latlng="+ lat+ "," +lng +"&language="+language,
-            type:'get',
-            dataType:'json',
-            success:function(res){
-                $('#zhezhao').fadeOut(1);
-                if(res.status=='OK'){
-                    var results=res.results;  //返回的数组结果
-                    for(var i=0; i<results.length; i++){
-                        var types = results[i].types;
-                        if(types.indexOf('locality')!=-1 || types.indexOf('administrative_area_level_2')!=-1){ //是城市
-                            detail_address = results[i].formatted_address;
-                            resolve(detail_address);
-                            break;
-                        }else if(types.indexOf('administrative_area_level_1')!=-1){
-                            detail_address = results[i].formatted_address;
-                            resolve(detail_address);
-                            break;
-                        }else if(types.indexOf('country')!=-1){
-                            detail_address = results[i].formatted_address;
-                            resolve(detail_address);
-                            break;
-                        }else{  //非城市
-                            continue;
-                        }
+        getLocation();
+        //请求数据
+        function getLocation(){
+            $.ajax({
+                url : api_url +"latlng="+ lat+ "," +lng +"&language="+language,
+                type:'get',
+                dataType:'json',
+                success:function(res){
+                    $('#zhezhao').fadeOut(1);
+                    if(res.status=='OK'){
+                        var results=res.results[0].address_components;  //返回的数组结果
+                        var result_len = results.length; 
+                        for(var i=result_len-1; i>=0; i--){
+                            var types = results[i].types;
+                            if(types.indexOf('country')!=-1){
+                                detail_address += results[i].long_name;
+                            }else if(types.indexOf('administrative_area_level_1')!=-1){
+                                detail_address += ','+ results[i].long_name;
+                            }else if(types.indexOf('locality')!=-1){
+                                detail_address += ','+ results[i].long_name;
+                            }
+                        };
+                        resolve(detail_address);
+                    }else{
+                        //reject('err');
+                        //如果请求不到数据就再次请求
+                        getLocation();
                     }
-                }else{
-                    reject('err');
                 }
-            }
-        });
+            });
+        }
     });
 }
+
 
 /**
  * 根据地名搜索经纬度**/
@@ -116,7 +116,6 @@ function search_latlng(place,language='EN'){
         }
     });
 }
-
 
 module.exports={
     search_place,

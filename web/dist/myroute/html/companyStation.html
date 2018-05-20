@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>routeMaker</title>
+<link href="/myroute/css/companyStation.css" rel="stylesheet"></head>
+<body>
+    <div class="box1">
+        
+        <div id="navigation">
+            <div id="logo">
+                <img src="/myroute/images/logo.png" alt="微盟电子">
+            </div>
+            <div class="login_status">
+                <a href="#">
+                    <span class="username">burt</span>
+                    <i class="icon route_iconfont route_icon-shang"></i>
+                </a>
+                <ul>
+                    <li class="login_out" data-i18n="login_out"></li>
+                </ul>
+            </div>
+            <div class="language_setting">
+                <a href="#">
+                    <span class="language" data-i18n="English" shortname="EN"></span>
+                    <i class="icon route_iconfont route_icon-shang"></i>
+                </a>
+                <ul>
+                    <li data-i18n="English" val="en_US" shortname="EN"></li>
+                    <li data-i18n="simplified_chinese" val="zh_CN" shortname="CN"></li>
+                    <li data-i18n="traditional_chinese" val="zh_TW" shortname="CN"></li>
+                </ul>
+            </div>
+        </div>
+        <div class="home">
+            <button class="btn btn-sm btn-primary go_back" data-i18n="home"></button>
+            
+            <span class="save_tip saved"></span>
+        </div>
+        <div id="container">
+            <div class="contain_left">
+                
+                <div class="contain_left_bottom">
+                    <p class="chosen_station_title">
+                        <span data-i18n="Company_station"></span>
+                        <span>:</span>
+                        <span id="search_station_numbers" class="numbers">0</span>
+                    </p>
+                    
+                    <div id="marked_stations" class="contain_box">
+                        <p class="err_tip" data-i18n="station_chosen"></p>
+                        <div class="search_data">
+                            <input type="text" class="form-control filter" data-i18n="Search">
+                            <i class="icon route_iconfont route_icon-chuyidong clear_text"></i>
+                            <i class="icon route_iconfont route_icon-sousuo serach"></i>
+                        </div>
+                        <div class="data_box my_diy_scrollbar">
+                            <table id="company_stations" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th data-i18n="Station_city"></th>
+                                        <th data-i18n="Station_name"></th>
+                                        <th class="postion" data-i18n="Lat_lng"></th>
+                                        <th class="operation" data-i18n="Action"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="5">No Data</th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <div id="pageShow">
+                            <div class="info_show">
+                                <span data-i18n="numbers"></span>: <span class="total">0</span>
+                            </div>
+                            
+                            <div class="Page">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 
+                 <div class="contain_left_top">
+                    <p class="chosen_station_title">
+                        <span data-i18n="Use_stations"></span>
+                        <span>:</span>
+                        <span id="search_route_numbers" class="numbers">0</span>
+                    </p>
+                    <div id="chosen_stations" class="contain_box">
+                        <div class="search_data">
+                            <input type="text" class="form-control filter" data-i18n="Search">
+                            <i class="icon route_iconfont route_icon-chuyidong clear_text"></i>
+                            <i class="icon route_iconfont route_icon-sousuo serach"></i>
+                        </div>
+                        <div class="data_box my_diy_scrollbar">
+                            <table id="company_used_stations" class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th data-i18n="Route_name"></th>
+                                        <th data-i18n="Edit"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th data-i18n="NoData" colspan="3"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="google_map_box">
+                
+                <form action="" id="latlng_search">
+                    <div class="latlng_search">
+                        <input id="place_input" class="form-control input_addr" type="text" data-i18n="Enter_address" placeholder="" autofocus="autofocus">
+                        <i class="icon route_iconfont route_icon-sousuo sosuo"></i>
+                        <p class="err_tip"></p>
+                    </div>
+                </form>
+                
+                <form action="" id="place_search_form">
+                    <div id="jingweidu_search"> 
+                        <input type="text" class="form-control search_place" maxlength="28" data-i18n="long_latitude" name="jingwei">
+                        <i class="icon route_iconfont route_icon-sousuo sosuo"></i>
+                        <p class="err_tip"></p>
+                    </div>
+                </form>
+                
+                <div id="google_map"></div>
+                
+                <div id="map_menu" oncontextmenu="return false">
+                    <ul class="menu_lists">
+                        <li class="menu_list add" data-i18n="Add_satation"></li>
+                        <li class="menu_list delete" data-i18n="Delete_marker"></li>
+                    </ul>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class="box2">
+        
+        <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" data-i18n="Add_marker"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control mark_name" data-i18n="Station_name" placeholder="">
+                        <p class="err_tip"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default cancel" data-i18n="No"></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n="Yes"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="marker_name">
+            <p class="myBg">
+                <span data-i18n="Marker_name"></span>
+                <i class="icon route_iconfont route_icon-chuyidong"></i>
+            </p>
+            <div class="my_inp">
+                <input type="text" class="form-control mark_name" data-i18n="Station_name" placeholder="">
+                <p class="err_tip"></p>
+            </div>
+            <div class="my_btn">
+                <button class="confirm btn btn-primary" data-i18n="Confirm"></button>
+            </div>
+        </div>
+        
+        <div id="myModal_delete" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n="ConfirmDelete"></h4>
+                    </div>
+                    <div class="modal-body">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="Close"></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n="Confirm"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="edit_company_stations" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n="Edit_station"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" class="form-control station_name" data-i18n="Station_name" placeholder="">
+                        <input type="text" class="form-control lat_lng" data-i18n="long_latitude" placeholder="">
+                        <p class="err_tip"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="Close"></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n="Confirm"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="myModal_gohome" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n="ConfirmLeave"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="err_tip"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="No"></button>
+                        <button type="button" class="btn btn-primary confirm" data-i18n="Yes"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="myModal_usedfor" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n="Station_used_for"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-bordered table-hover" id="stations_used_table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th data-i18n="Route_name"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th data-i18n="NoData" colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <div class="nums">
+                            <span data-i18n="numbers"></span>:
+                            <span class="numbers"></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal" data-i18n="Close"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="save_success">
+            <p class="save_tip"></p>
+        </div>
+
+        
+        <div id="route_info" class="modal fade route_info merge_route" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" data-i18n="Choose_language"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="body_language" id="choose_language">
+                            
+                            <div class="alert alert-danger alert-dismissible waring_info" role="alert">
+                                <button type="button" class="close" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                <p class="tip_info"></p>
+                            </div>
+                            <p class="button_choose">
+                                <button class="btn btn-primary language" data-i18n="Language"></button>
+                                
+                            </p>
+                            <div class="language_box my_diy_scrollbar">
+                                <ul class="chosen my_diy_scrollbar">
+                                    
+                                    <div class="clear"></div>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="body_table my_diy_scrollbar">
+                            <table class="table table-bordered table-hover" id="language_table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="Language"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                   
+                                </tbody>
+                                <tfoot>
+    
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        
+                        <div class="alert alert-danger submit_waring"></div>
+                        
+                        <div class="alert alert-success submit_success"></div>
+                        <button type="button" class="btn btn-primary confirm" data-i18n="Confirm"></button>
+                        <button type="button" class="btn btn-default disabled download">
+                            <a href="">
+                                <i class="icon route_iconfont route_icon-comiisxiazai"></i>
+                            </a>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div id="language_lists_box">
+            <p class="title_info">
+                <span data-i18n="Choose_language"></span>
+                <i class="icon route_iconfont route_icon-chuyidong"></i>
+            </p>
+            <div class="languages_left">
+                <ul class="choose_my_language my_diy_scrollbar">
+                    
+                </ul>
+            </div>
+        </div>
+
+        
+        <div id="zhezhao">
+            <p></p>
+            <div class="sk-cube-grid">
+            <div class="sk-cube sk-cube1"></div>
+            <div class="sk-cube sk-cube2"></div>
+            <div class="sk-cube sk-cube3"></div>
+            <div class="sk-cube sk-cube4"></div>
+            <div class="sk-cube sk-cube5"></div>
+            <div class="sk-cube sk-cube6"></div>
+            <div class="sk-cube sk-cube7"></div>
+            <div class="sk-cube sk-cube8"></div>
+            <div class="sk-cube sk-cube9"></div>  
+            </div> 
+        </div>
+    </div>
+    <script src="http://ditu.google.cn/maps/api/js?key=AIzaSyCGVXsiA5N7QdruFkgiwUHzXHBZJItezv8&v=3.29&language=en&libraries=places" type="text/javascript"></script>
+<script type="text/javascript" src="/myroute/js/common_jq.js"></script><script type="text/javascript" src="/myroute/js/pagination.js"></script><script type="text/javascript" src="/myroute/js/markerclusterer.js"></script><script type="text/javascript" src="/myroute/js/bootstrapjs.js"></script><script type="text/javascript" src="/myroute/js/companyStation.js"></script></body>
+</html>

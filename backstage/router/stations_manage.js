@@ -4,6 +4,7 @@ const event_poll=require('./dbHelper');  //事务回滚
 const xml2js=require('xml2js');
 const builder=new xml2js.Builder();
 const parser=new xml2js.Parser();
+const sessionCheck=require('./check_session.js');  //更新最后操作的时间
 
 //数据库连接
 const db=require('./databaseConnection').pool;
@@ -30,6 +31,7 @@ var station_manage=function(server){
                             console.log(err);
                             res.status(500).send('connect to database error').end();
                         }else{
+                            sessionCheck.update_database_last_time(req);
                             res.send({msg:'ok',data:data}).end();
                         }
                     });
@@ -52,6 +54,7 @@ var station_manage=function(server){
         var station_id=req.body.station_id;  //站点id
         var stations_name=req.body.stations_name; //站点名
         var addr_content=req.body.addr_content;  //marker内容
+        var city_name=req.body.city_name; //城市名
         var latLng=req.body.latLng;  //经纬度
         var lat=latLng.lat; //纬度
         var lng=latLng.lng; //经度
@@ -64,119 +67,70 @@ var station_manage=function(server){
                     var table_name=zuhe_key+'_route_lang';
                     var sql=`SELECT lang FROM ${table_name} WHERE route_id='${xml_id}'`;
                     connection.query(sql,(err,data)=>{
-                        connection.release();
                         if(err){
                             console.log(err);
                             res.status(500).send('connect to database error').end();
                         }else{
                             var languages=data;  //语言数组
-                            //执行多条sql语句
-                            var sqlParamsEntity = [];
-
-                            //插入公司站点
-                            var table_name1=zuhe_key+'_stations';
-                            var sql1=`INSERT INTO ${table_name1}(ctime,station_id,stations_name,addr_content,lat,lng) 
-                                    VALUES('${ctime}','${station_id}','${stations_name}','${addr_content}','${lat}','${lng}')`;
-                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
-                            //插入多对多表格
-                            /* var table_name2=zuhe_key+'_routes_stations';
-                            var sql2=`INSERT INTO ${table_name2}(route_id,station_id) VALUES
-                                    ('${xml_id}','${station_id}')`;
-                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2)); */
-
-                            //站点语言表中插入站点语言
-                            var table_name3=zuhe_key+'_station_lang';
-                            var the_time=new Date().getTime();
-                            var sql3="INSERT INTO "+table_name3+"(ID,station_id,lang,transition) VALUES ";
-                            for(var i=0; i<languages.length; i++){
-                                var lang=languages[i].lang;  //语言
-                                var transition='';
-                                var ID=the_time+i;
-                                if(lang=='en.US'){
-                                    transition=stations_name;
-                                }
-                                sql3 += "('"+ID+"','"+station_id+"','"+lang+"','"+transition+"')";
-                                if(i!=languages.length-1){
-                                    sql3 += ',';
-                                }
-                            }
-                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
-
-                            event_poll.execTrans(sqlParamsEntity, (err, info)=>{
-                                if(err){
-                                    //console.log('事务处理失败');
-                                    res.status(500).send('connect to database error').end();
-                                }else{
-                                    //console.log('事务处理成功');
-                                    res.send({msg:'ok'}).end();
-                                }
-                            });
-                        }
-                    });
-                    
-                }
-            });
-        }else{  
-            res.send({msg:'err'}).end();
-        }
-    });
-
-    //公司删除某个站点
-    server.post('/myroute/delete_station',(req,res)=>{
-        var ID=req.session['user_id'];
-        var sz=req.session['user_sz'];
-        var username=req.session['user_name']; //用户名
-        var zuhe_key=sz+'_'+username;
-
-        var station_id=req.body.station_id;  //站点id
-        var route_id=req.body.route_id;  //站点id
-        if(ID && sz && username){
-            db.getConnection((err,connection)=>{
-                if(err){
-                    console.log(err);
-                    res.status(500).send('connect to database error').end();
-                }else{
-                    var table_name=zuhe_key+'_xml_table';
-                    var sql=`SELECT station_num FROM ${table_name} WHERE ctime='${route_id}'`;
-
-                    connection.query(sql,(err,data)=>{
-                        if(err){
-                            console.log(err);
-                            res.status(500).send('connect to database error').end();
-                        }else{
-                            if(data.length==0){
+                            //检查站点名称是否重复
+                            table_name=zuhe_key+'_stations';
+                            sql=`SELECT stations_name,station_id FROM ${table_name} WHERE 
+                                    stations_name='${stations_name}'`;
+                            connection.query(sql, (err,data)=>{
                                 connection.release();
-                                res.send({msg:'no'}).end();
-                            }else{
-                                var station_num=data[0].station_num;  //路线下的站点数目
-                                table_name=zuhe_key+'_routes_stations';
-                                sql=`SELECT * FROM ${table_name} WHERE route_id='${route_id}' AND station_id='${station_id}'`;
-                                connection.query(sql,(err,data)=>{
-                                    connection.release();
-                                    if(err){
-                                        console.log(err);
-                                        res.status(500).send('connect to database error').end();
+                                if(err){
+                                    console.log(err);
+                                    res.status(500).send('connect to database error.');
+                                }else{
+                                    if(data.length ==1){
+                                        res.send({msg:'has'}).end();
                                     }else{
+                                        //执行多条sql语句
                                         var sqlParamsEntity = [];
-                                        if(data.length !=0){ //如果有该数据
-                                            var table_name1=zuhe_key+'_xml_table';
-                                            var sql1=`UPDATE ${table_name1} SET station_num=${station_num-1} 
-                                                WHERE ctime='${route_id}'`;
-                                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));  
+
+                                        //插入公司站点
+                                        var table_name1=zuhe_key+'_stations';
+                                        var sql1=`INSERT INTO ${table_name1}(ctime,station_id,stations_name,addr_content,lat,lng,city_name) 
+                                                VALUES('${ctime}','${station_id}','${stations_name}','${addr_content}','${lat}','${lng}',
+                                                '${city_name}')`;
+                                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                                        //插入多对多表格
+                                        /* var table_name2=zuhe_key+'_routes_stations';
+                                        var sql2=`INSERT INTO ${table_name2}(route_id,station_id) VALUES
+                                                ('${xml_id}','${station_id}')`;
+                                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2)); */
+
+                                        //站点语言表中插入站点语言
+                                        var table_name3=zuhe_key+'_station_lang';
+                                        var the_time=new Date().getTime();
+                                        var sql3="INSERT INTO "+table_name3+"(ID,station_id,lang,transition) VALUES ";
+                                        for(var i=0; i<languages.length; i++){
+                                            var lang=languages[i].lang;  //语言
+                                            var transition='';
+                                            var ID=the_time+i;
+                                            if(lang=='en.US'){
+                                                transition=stations_name;
+                                            }
+                                            sql3 += "('"+ID+"','"+station_id+"','"+lang+"','"+transition+"')";
+                                            if(i!=languages.length-1){
+                                                sql3 += ',';
+                                            }
                                         }
-                                        var table_name2=zuhe_key+'_stations';
-                                        var sql2=`DELETE FROM ${table_name2} WHERE station_id='${station_id}'`;
-                                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));    
+                                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
+
                                         event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                             if(err){
+                                                //console.log('事务处理失败');
                                                 res.status(500).send('connect to database error').end();
                                             }else{
+                                                //console.log('事务处理成功');
+                                                sessionCheck.update_database_last_time(req);
                                                 res.send({msg:'ok'}).end();
                                             }
                                         });
                                     }
-                                });
-                            }
+                                }
+                            });
                         }
                     });
                 }
@@ -223,6 +177,7 @@ var station_manage=function(server){
                                         console.log(err);
                                         res.status(500).send('connect to database error').end();
                                     }else{
+                                        sessionCheck.update_database_last_time(req);
                                         res.send({msg:'ok'}).end();
                                     }
                                 });
@@ -278,6 +233,7 @@ var station_manage=function(server){
                         console.log(err);
                         res.status(500).send('connect to database error').end();
                     }else{
+                        //获取该站点已经存在的那几种语言翻译
                         var table_name=zuhe_key+'_station_lang';
                         var sql="SELECT * FROM "+table_name+" WHERE station_id='"+station_id+"' AND "
                                 +"lang in (";
@@ -328,6 +284,7 @@ var station_manage=function(server){
                                         console.log(err);
                                         res.status(500).send('connect to database error').end();
                                     }else{
+                                        sessionCheck.update_database_last_time(req);
                                         res.send({msg:'ok'}).end();
                                     }
                                 });
@@ -347,7 +304,7 @@ var station_manage=function(server){
         }
     });
 
-    //为路线删除站点
+    //为路线删除公司站点
     server.post('/myroute/route_delete_station',(req,res)=>{
         var ID=req.session['user_id'];
         var sz=req.session['user_sz'];
@@ -389,6 +346,7 @@ var station_manage=function(server){
                                     if(err){
                                         res.status(500).send('connect to database error').end();
                                     }else{
+                                        sessionCheck.update_database_last_time(req);
                                         res.send({msg:'ok'}).end();
                                     }
                                 });
@@ -460,6 +418,7 @@ var station_manage=function(server){
                                                     addr_content : data[j].addr_content,
                                                     lng : data[j].lng,
                                                     lat : data[j].lat,
+                                                    city_name: data[j].city_name
                                                 };
                                                 if(station_id ==the_station_id){
                                                     data.splice(j,1);
@@ -468,10 +427,12 @@ var station_manage=function(server){
                                                 }
                                             }
                                         }
+                                        sessionCheck.update_database_last_time(req);
                                         res.send({msg:'ok',data:data}).end();
                                     }
                                 });
                             }else{
+                                sessionCheck.update_database_last_time(req);
                                 res.send({msg:'ok',data:[]}).end();
                             }
                             
@@ -500,49 +461,77 @@ var station_manage=function(server){
                     console.log(err);
                     res.status(500).send('connect to database error').end();
                 }else{
-                    var table_name=zuhe_key+'_xml_table';
-                    var sql=`SELECT * FROM ${table_name} WHERE ctime='${route_id}'`;
-                    connection.query(sql,(err,data)=>{
-                        if(err){
-                            console.log(err);
-                            res.status(500).send('connect to database error').end();
-                        }else{
-                            if(data.length==0){
-                                connection.release();
-                                res.send({msg:'no'}).end();
+                    new Promise((resolve,reject)=>{
+                        var table_name = zuhe_key+ '_xml_table';
+                        var sql=`SELECT ctime FROM ${table_name} WHERE routes LIKE '%${route_id}%'`;
+                        connection.query(sql,(err,data)=>{
+                            connection.release();
+                            if(err){
+                                console.log(err);
+                                res.status(500).send('connect to database error').end();
                             }else{
-                                connection.release();
-                                //更新数据库
-                                var sqlParamsEntity = [];
-                                var table_name1=zuhe_key+'_routes_stations';
-                                var sql1="REPLACE INTO "+table_name1+"(ctime,route_id,station_id,inde) VALUES ";
-                                for(var i=0; i<send_data.stations.length; i++){
-                                    let ctime=send_data.stations[i].ctime;
-                                    let station_id=send_data.stations[i].station_id;
-                                    sql1 += "('"+ctime+"','"+route_id+"','"+station_id+"',"+i+")";
-                                    if(i != send_data.stations.length-1){
-                                        sql1 += ",";
-                                    }
+                                if(data.length==0){
+                                    reject('no');
+                                }else{
+                                    resolve({routes:data});
                                 }
-                                sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
-                                //更新站点数目
-                                var station_num=send_data.stations.length;
-                                var table_name2=zuhe_key+'_xml_table';
-                                var sql2=`UPDATE ${table_name2} SET station_num=${station_num}
-                                        WHERE ctime='${route_id}'`;
-                                sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
+                            }
+                        });
+                    })
+                    .then(function(data){
+                        var sqlParamsEntity = [];
 
-                                event_poll.execTrans(sqlParamsEntity, function(err, info){
-                                    if(err){
-                                        //console.log('事务处理失败');
-                                        res.status(500).send('connect to database error').end();
-                                    }else{
-                                        //console.log('事务处理成功');
-                                        res.send({msg:'ok'}).end();
-                                    }
-                                });
+                        var table_name=zuhe_key+'_xml_table';
+                        var routes= [];
+                        for(var i=0; i<data.routes.length; i++){
+                            let route_id = data.routes[i].ctime;
+                            if(routes.indexOf(route_id)==-1){
+                                routes.push(route_id);
                             }
                         }
+                        var routes_str="";
+                        for(var i=0; i<routes.length; i++){
+                            routes_str += " routes LIKE '%" + routes[i]+ "%' ";
+                            if(i!= routes.length-1){
+                                routes_str += "OR";
+                            }
+                        }
+                        var mtime = new Date().getTime().toString();
+                        var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ${routes_str}`;
+                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                        
+                        //更新数据库
+                        var sqlParamsEntity = [];
+                        var table_name1=zuhe_key+'_routes_stations';
+                        var sql1="REPLACE INTO "+table_name1+"(ctime,route_id,station_id,inde) VALUES ";
+                        for(var i=0; i<send_data.stations.length; i++){
+                            let ctime=send_data.stations[i].ctime;
+                            let station_id=send_data.stations[i].station_id;
+                            sql1 += "('"+ctime+"','"+route_id+"','"+station_id+"',"+i+")";
+                            if(i != send_data.stations.length-1){
+                                sql1 += ",";
+                            }
+                        }
+                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                        //更新站点数目
+                        var station_num=send_data.stations.length;
+                        var table_name2=zuhe_key+'_xml_table';
+                        var sql2=`UPDATE ${table_name2} SET station_num=${station_num}
+                                WHERE ctime='${route_id}'`;
+                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
+
+                        event_poll.execTrans(sqlParamsEntity, function(err, info){
+                            if(err){
+                                //console.log('事务处理失败');
+                                res.status(500).send('connect to database error').end();
+                            }else{
+                                //console.log('事务处理成功');
+                                sessionCheck.update_database_last_time(req);
+                                res.send({msg:'ok'}).end();
+                            }
+                        });
+                    },function(msg){
+                        res.send({msg:'no'}).end();
                     });
                 }
             });
@@ -561,35 +550,66 @@ var station_manage=function(server){
         if(ID && sz && username){
             var route_id = req.body.xml_id;
             var get_data = req.body.send_data;
-            function search_xml_id(){
-                return new Promise(function(resolve,reject){
-                    db.getConnection((err,connection)=>{
-                        if(err){
-                            console.log(err);
-                            res.status(500).send('connect to database error').end();
-                        }else{
-                            var table_name=zuhe_key+'_xml_table';
-                            var sql = `SELECT * FROM ${table_name} WHERE ctime='${route_id}'`;
-                            connection.query(sql,(err,data)=>{
-                                connection.release();
-                                if(err){
-                                    console.log(err);
-                                    res.status(500).send('connect to database error').end();
+            return new Promise(function(resolve,reject){
+                db.getConnection((err,connection)=>{
+                    if(err){
+                        console.log(err);
+                        res.status(500).send('connect to database error').end();
+                    }else{
+                        var table_name=zuhe_key+'_xml_table';
+                        var sql = `SELECT * FROM ${table_name} WHERE ctime='${route_id}'`;
+                        connection.query(sql,(err,data)=>{
+                            if(err){
+                                console.log(err);
+                                res.status(500).send('connect to database error').end();
+                            }else{
+                                if(data.length==0){
+                                    reject('no');
                                 }else{
-                                    if(data.length==0){
-                                        reject('no');
-                                    }else{
-                                        resolve('ok');
-                                    }
+                                    table_name = zuhe_key+ '_xml_table';
+                                    sql=`SELECT ctime FROM ${table_name} WHERE routes LIKE '%${route_id}%'`;
+                                    connection.query(sql,(err,data)=>{
+                                        connection.release();
+                                        if(err){
+                                            console.log(err);
+                                            res.status(500).send('connect to database error').end();
+                                        }else{
+                                            if(data.length==0){
+                                                resolve({msg:'no'});
+                                            }else{
+                                                resolve({routes:data});
+                                            }
+                                        }
+                                    });
                                 }
-                            });
-                        }
-                    });
+                            }
+                        });
+                    }
                 });
-            };
-            search_xml_id()
-            .then(function(msg){
+            })
+            .then(function(data){
                 var sqlParamsEntity = [];
+                if(data.msg!='no'){
+                    var table_name=zuhe_key+'_xml_table';
+                    var routes= [];
+                    for(var i=0; i<data.routes.length; i++){
+                        let route_id = data.routes[i].ctime;
+                        if(routes.indexOf(route_id)==-1){
+                            routes.push(route_id);
+                        }
+                    }
+                    var routes_str="";
+                    for(var i=0; i<routes.length; i++){
+                        routes_str += " routes LIKE '%" + routes[i]+ "%' ";
+                        if(i!= routes.length-1){
+                            routes_str += " OR ";
+                        }
+                    }
+                    var mtime = new Date().getTime().toString();
+                    var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ${routes_str}`;
+                    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                }
+                
                 //更新顺序
                 //更新经纬度以及站点station_id
                 var table_name1=zuhe_key+'_stations';
@@ -644,6 +664,7 @@ var station_manage=function(server){
                         console.log(err);
                         res.status(500).send('connect to database error').end();
                     }else{
+                        sessionCheck.update_database_last_time(req);
                         res.send({msg:'ok'}).end();
                     }
                 });
@@ -666,14 +687,7 @@ var station_manage=function(server){
 
         if(ID && sz && username){
             var route_id = req.body.route_id;  //路线的id
-            var page = req.body.page; //获取的页码
-            var nums_limit = req.body.nums_limit;  //获取的数据条数
-            var station_name = req.body.station_name;  //获取的站点名称
-            if(page < 1){
-                page = 1;
-            }
-            var start= (page-1)* nums_limit;  //起始位置
-
+            
             db.getConnection((err,connection)=>{
                 if(err){
                     console.log(err);
@@ -691,11 +705,7 @@ var station_manage=function(server){
                             res.send({msg:'no'}).end();
                         }else{
                             var table_name2=zuhe_key+'_stations';
-                            if(station_name){  //搜索
-                                sql2=`SELECT COUNT(*) AS count FROM ${table_name2} WHERE stations_name LIKE '%${station_name}%'`;
-                            }else{
-                                sql2=`SELECT COUNT(*) AS count FROM ${table_name2}`;
-                            }
+                            sql2=`SELECT COUNT(*) AS count FROM ${table_name2}`;
                             connection.query(sql2,(err,data)=>{
                                 if(err){
                                     console.log(err);
@@ -705,22 +715,15 @@ var station_manage=function(server){
                                     if(dataLen==0){
                                         res.send({msg:'ok', data:[]}).end();
                                     }else{
-                                        if(station_name){ //根据条件搜索
-                                            var sql3=`SELECT * FROM ${table_name2} WHERE stations_name LIKE '%${station_name}%'
-                                                    ORDER BY CAST(ctime as unsigned) desc LIMIT ${start},${nums_limit}`;
-                                        }else if(nums_limit){ //有页码限制
-                                            var sql3=`SELECT * FROM ${table_name2} 
-                                            ORDER BY CAST(ctime as unsigned) desc LIMIT ${start},${nums_limit}`;
-                                        }else{
-                                            var sql3=`SELECT * FROM ${table_name2} 
-                                                ORDER BY CAST(ctime as unsigned) desc`;
-                                        }
+                                        var sql3=`SELECT * FROM ${table_name2} 
+                                                ORDER BY city_name`;
                                         connection.query(sql3,(err,data)=>{
                                             connection.release();
                                             if(err){
                                                 console.log(err);
                                                 res.status(500).send('connect to database error.');
                                             }else{
+                                                sessionCheck.update_database_last_time(req);
                                                 res.send({msg:'ok', data,dataLen:dataLen}).end();
                                             }
                                         });
@@ -736,6 +739,100 @@ var station_manage=function(server){
         }
     });
 
+    //更改公司站点的名称和position
+    server.post('/myroute/change_station_info',(req,res)=>{
+        var ID=req.session['user_id'];
+        var sz=req.session['user_sz'];
+        var username=req.session['user_name']; //用户名
+        var zuhe_key=sz+'_'+username;
+
+        if(ID && sz && username){
+            var origin_station_id = req.body.origin_station_id;  //原始的station_id
+            var station_id = req.body.station_id;  //更改后的station_id
+            var latLng = req.body.latLng;  //经纬度
+            var station_name = req.body.station_name;  //站点名称
+            //var addr_content='<div><strong>' + station_name + '</strong><br></div>'; 
+            db.getConnection((err,connection)=>{
+                if(err){
+                    console.log(err);
+                    res.status(500).send('connect to database error.');
+                }
+                new Promise((resolve,reject)=>{
+                    var table_name=zuhe_key+'_routes_stations';
+                    var sql=`SELECT route_id FROM ${table_name} WHERE station_id='${origin_station_id}'`;
+                    connection.query(sql,(err,data)=>{
+                        if(err){
+                            console.log(err);
+                            res.status(500).send('connect to database error').end();
+                        }else{
+                            table_name = zuhe_key+ '_xml_table';
+                            sql ="SELECT ctime FROM "+table_name+" WHERE ";
+                            for(var i=0; i<data.length; i++){
+                                let route_id = data[i].route_id;
+                                sql += "routes LIKE '%" +route_id+"%'";
+                                if(i!=0 && i!=data.length-1){
+                                    sql += " OR ";
+                                }
+                            }
+                            connection.query(sql,(err,data1)=>{
+                                connection.release();
+                                if(err){
+                                    console.log(err);
+                                    res.status(500).send('connect to database error').end();
+                                }else{
+                                    resolve({routes1:data,routes2:data1});
+                                }
+                            });
+                        }
+                    });
+                })
+                .then(function(data){
+                    var sqlParamsEntity = [];
+                    var table_name=zuhe_key+'_xml_table';
+                    var routes= [];
+                    for(var i=0; i<data.routes1.length; i++){
+                        let route_id = data.routes1[i].route_id;
+                        if(routes.indexOf(route_id)==-1){
+                            routes.push(route_id);
+                        }
+                    }
+                    for(var i=0; i<data.routes2.length; i++){
+                        let route_id = data.routes2[i].ctime;
+                        if(routes.indexOf(route_id)==-1){
+                            routes.push(route_id);
+                        }
+                    }
+                    routes = "("+ routes.join(',')+ ")" ;
+                    var mtime = new Date().getTime().toString();
+                    var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ctime IN ${routes}`;
+                    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+
+                    //更新stations表
+                    var table_name1 = zuhe_key+ '_stations';
+                    var sql1 = `UPDATE ${table_name1} SET station_id='${station_id}',
+                            stations_name='${station_name}',lat='${latLng.lat}',lng='${latLng.lng}' 
+                            WHERE station_id='${origin_station_id}'`;
+                    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                    //更新站点英文翻译表station_lang
+                    var table_name2 = zuhe_key+ '_station_lang';
+                    var sql2 = `UPDATE ${table_name2} SET transition='${station_name}'
+                                WHERE station_id='${station_id}' AND lang='en.US'`;
+                    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
+                    event_poll.execTrans(sqlParamsEntity,(err,info)=>{
+                        if(err){
+                            console.log(err);
+                            res.status(500).send('connect to database error').end();
+                        }else{
+                            sessionCheck.update_database_last_time(req);
+                            res.send({msg:'ok'}).end();
+                        }
+                    });
+                });
+            });
+        }else{  
+            res.send({msg:'err'}).end();
+        }
+    });
 }
 
 

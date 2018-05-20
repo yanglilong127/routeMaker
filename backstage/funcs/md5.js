@@ -10,6 +10,5 @@ function md5(str){
 }
 
 module.exports={
-    MD5_SUFFIX: 'DFFDFfscs23rstt44f杨aAd利龙fr%244556%^&&dd',//加密前缀，任意写
     md5
 }

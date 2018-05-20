@@ -6,7 +6,6 @@ import {login_url} from '../configs/setting.js'; //cloud登录地址
 
 var url_json=parseQueryString(window.location.href);
 var company_id=Number(url_json.uid);  //公司id
-var route_id = url_json.xml_id;  //路线id
 
 /**
  * new_company_drag 是否是新增的公司站点拖拽
@@ -14,11 +13,29 @@ var route_id = url_json.xml_id;  //路线id
 function marker_drag_ev(marker,new_company_drag=false){
     
     var init_latLng;  //拖拽之前初始的经纬度
+    var compang_station_index;  //表示在拖动的是第几个
     marker.addListener('dragstart',function(e){
         init_latLng = e.latLng; //将最开始的经纬度位置赋值
+        var station_id = this.origin_station_id;
+        for(var i=0; i<window.company_markers.length; i++){
+            var _origin_station_id = window.company_markers[i].origin_station_id;
+            if(station_id == _origin_station_id){
+                compang_station_index = i;
+                break;
+            }
+        };
+        //滚动条高度
+        let td_height=$('#company_stations tbody tr').eq(0).height();
+        let scroll_h = td_height * compang_station_index;
+        $('#marked_stations .data_box').scrollTop(scroll_h);
+        //添加正在拖拽的背景颜色样式
+        $('#company_stations tbody tr').eq(compang_station_index).addClass('draggable')
+        .siblings().removeClass('draggable');
     });
 
     marker.addListener('dragend',function(e){
+        //清除正在拖拽的背景颜色样式
+        $('#company_stations tbody tr').eq(compang_station_index).removeClass('draggable');
         var station_id = this.station_id;  //站点id
         //console.log('初始',station_id)
         var ret_data = cal_station_id(company_id,e.latLng,window.company_markers,station_id);
@@ -69,7 +86,6 @@ function marker_drag_ev(marker,new_company_drag=false){
                     url : '/myroute/company_drag_station',
                     type: 'post',
                     data :{
-                        route_id,
                         origin_station_id :station_id,
                         station_id:ret_data.station_id,
                         latLng : ret_data.latLng
@@ -85,6 +101,9 @@ function marker_drag_ev(marker,new_company_drag=false){
                                 let _station_id=$table_tr.eq(i).attr('station_id');
                                 if(station_id == _station_id){
                                     $table_tr.eq(i).attr('station_id',ret_data.station_id);
+                                    $table_tr.eq(i).find('td.station_addr')
+                                    .text(ret_data.latLng.lat +'\/'+ret_data.latLng.lng)
+                                    .attr('title', ret_data.latLng.lat +','+ret_data.latLng.lng);
                                     break;
                                 }
                             }
@@ -106,6 +125,24 @@ function marker_drag_ev(marker,new_company_drag=false){
             }
         }
     });
+
+    //点击该marker
+    marker.addListener('click',function(e){
+        var station_id = this.origin_station_id;
+        for(var i=0; i<window.company_markers.length; i++){
+            var _origin_station_id = window.company_markers[i].origin_station_id;
+            if(station_id == _origin_station_id){
+                //滚动条高度
+                let td_height=$('#company_stations tbody tr').eq(0).height();
+                let scroll_h = td_height * i;
+                $('#marked_stations .data_box').scrollTop(scroll_h);
+                //添加正在拖拽的背景颜色样式
+                $('#company_stations tbody tr').eq(i).addClass('draggable')
+                .siblings().removeClass('draggable');
+                break;
+            }
+        };
+    })
 
 }
 
@@ -154,9 +191,9 @@ function draw_line(expand=true){
     flightPath.setMap(null);
     flightPath.setMap(map);
 
-    if(window.markers.length < 2){ //一个以上标记才缩放
+    /* if(window.markers.length < 2){ //一个以上标记才缩放
         return;
-    }
+    } */
     //设置最佳缩放级别
     for (var i=0; i<window.markers.length; i++) {  
         bounds.extend (window.markers[i].getPosition()); 
@@ -177,7 +214,9 @@ function draw_line(expand=true){
                 url:'/myroute/libs/images/station_start.png'
             });
         }else{
-            window.markers[i].setIcon(null);
+            window.markers[i].setIcon({
+                url:'/myroute/libs/images/middle_station.png'
+            });
         }
     }  
     if(expand){
