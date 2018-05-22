@@ -1,4 +1,4 @@
-webpackJsonp([2,6],[
+webpackJsonp([3,6],[
 /* 0 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -8492,6 +8492,9 @@ function draw_line() {
 
     //按照Choosen Station顺序排列
     var $choose_station = $('#chosen_stations ul.stations_lists li.stations_list');
+    if ($choose_station.length == 0) {
+        return;
+    }
     for (var i = 0; i < $choose_station.length; i++) {
         var station_id = Number($choose_station.eq(i).attr('station_id'));
         var station_index = i + 1; //站点序号
@@ -9061,1478 +9064,7 @@ module.exports = {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 47 */,
-/* 48 */,
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */,
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */,
-/* 60 */,
-/* 61 */,
-/* 62 */,
-/* 63 */,
-/* 64 */,
-/* 65 */,
-/* 66 */,
-/* 67 */,
-/* 68 */,
-/* 69 */,
-/* 70 */,
-/* 71 */,
-/* 72 */,
-/* 73 */,
-/* 74 */,
-/* 75 */,
-/* 76 */,
-/* 77 */,
-/* 78 */,
-/* 79 */,
-/* 80 */,
-/* 81 */,
-/* 82 */,
-/* 83 */,
-/* 84 */,
-/* 85 */,
-/* 86 */,
-/* 87 */,
-/* 88 */,
-/* 89 */,
-/* 90 */,
-/* 91 */,
-/* 92 */,
-/* 93 */,
-/* 94 */,
-/* 95 */,
-/* 96 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-
-var _i18next = __webpack_require__(4);
-
-var _i18next2 = _interopRequireDefault(_i18next);
-
-var _i18nextXhrBackend = __webpack_require__(5);
-
-var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
-
-var _functions = __webpack_require__(6);
-
-var _setting = __webpack_require__(7);
-
-var _pagination = __webpack_require__(23);
-
-var _authmyid = __webpack_require__(31);
-
-var _marker_drag = __webpack_require__(30);
-
-var _company_station_pagination = __webpack_require__(97);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-//加载样式文件
-__webpack_require__(27);
-__webpack_require__(25);
-__webpack_require__(98);
-
-__webpack_require__(26);
-window.map;
-window.markers = []; //该条路线所有的标记集合
-window.company_markers = []; //添加的公司所有站点
-window.markerClusterer;
-window.infoWindow;
-
-//url解析
-var operate_map = __webpack_require__(99); //cloud登录地址
-//输入框名字
-//验证登录的功能
-
-(0, _authmyid.login_check)();
-(0, _authmyid.login_out)(); //登出按钮操作
-
-var url = window.location.href;
-var route_name = decodeURI((0, _functions.parseQueryString)(url).route_name); //路线名
-$('.box1 .home span.route_name').text(route_name);
-//返回主页的连接地址
-var home_addr = url.replace('/html/routeMaker.html', '/index.html').split('&xml_id=')[0];
-//返回公司站点管理页地址
-var company_station_addr = url.replace('/routeMaker.html', '/companyStation.html').split('&xml_id=')[0];
-$('.box1 .home').find('button.go_back,button.go_company_station_manage').click(function (e) {
-    //返回主页
-    e.stopPropagation();
-    if ($('.box1 .home span.save_tip').hasClass('saved')) {
-        //保存过了，即未做修改
-        if ($(this).hasClass('go_back')) {
-            window.location = home_addr;
-        } else {
-            window.location = company_station_addr;
-        }
-    } else {
-        var save_tip = _i18next2.default.t('Not_save_tip');
-        $('#myModal_gohome').modal('show'); //模态框显示
-        $('#myModal_gohome .modal-body p.err_tip').text(save_tip);
-        //点击确定
-        $('#myModal_gohome .modal-footer button.confirm').unbind('click');
-        $('#myModal_gohome .modal-footer button.confirm').bind('click', function (e) {
-            e.stopPropagation();
-            if ($(this).hasClass('go_back')) {
-                window.location = home_addr;
-            } else {
-                window.location = company_station_addr;
-            }
-        });
-    }
-});
-
-url = (0, _functions.parseQueryString)(url);
-var company_id = Number(url.uid); //公司id
-var xml_id = url.xml_id; //xml+id值
-//模态框，是否添加标记,初始化模态框
-$('#myModal,#edit_company_stations,#myModal_gohome').modal({
-    show: false
-});
-//模态框标记名输入框检测
-$('#myModal .modal-body input.mark_name').get(0).oninput = function (e) {
-    e.stopPropagation();
-    (0, _pagination.input_check_fun)($(this), 1000);
-};
-
-//使标记命名框可以拖动
-$('#marker_name').draggable();
-$('#marker_name p.myBg i').click(function (e) {
-    e.stopPropagation();
-    $('#marker_name').fadeOut(); //隐藏
-});
-$('#marker_name .my_inp input.mark_name').get(0).oninput = function (e) {
-    e.stopPropagation();
-    (0, _pagination.input_check_fun)($(this), 1000);
-};
-
-//使站点列表可以排序
-$('#chosen_stations ul.stations_lists').sortable({
-    stop: function stop(ui) {
-        //排序完释放鼠标后执行的函数
-        (0, _marker_drag.draw_line)(); //画线
-        var save_val = _i18next2.default.t('UnSaved');
-        $('.home span.save_tip').removeClass('saved').attr('data-i18n', 'UnSaved').text(save_val);
-    }
-});
-
-function map_reset() {
-    //地图重新画
-    var place = map.getCenter(); //获取位置
-    var zoom = map.getZoom(); //获取位置
-    window.map = new google.maps.Map(document.getElementById('google_map'), {
-        zoom: zoom,
-        center: place,
-        streetViewControl: true,
-        rotateControl: true,
-        scaleControl: true
-    });
-    window.clearMarkers_clusterer(window.markers);
-    (0, _marker_drag.draw_line)(); //重新画线
-}
-
-window.my_company_stations = new _company_station_pagination.Company_station();
-window.my_company_stations.get_route_stations();
-window.my_company_stations.get_company_station().then(function (getData) {
-    //添加公司下所有站点数据
-    my_company_stations.add_all_stations(getData);
-}, function (msg) {
-    $('#zhezhao').fadeOut(1);
-});
-
-//点击搜索按钮
-$('#jingweidu_search i.sosuo').click(function (e) {
-    $('#place_search_form').submit(); //表单提交
-});
-
-//经纬度搜索表单提交
-$('#place_search_form').submit(function (e) {
-    e.preventDefault(); //阻止对表单的提交
-    var input_val = $('#jingweidu_search input.search_place').val().trim();
-    if (!input_val) {
-        //非空，为空即返回
-        return;
-    }
-
-    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
-    var $err_tip = $('#jingweidu_search p.err_tip');
-    input_val = input_val.split(','); //分成数组
-    if (input_val.length != 2) {
-        $err_tip.html(err_tip).stop(true).fadeIn(100);
-        setTimeout(function () {
-            $err_tip.stop(true).fadeOut();
-        }, 5000);
-        return;
-    } else {
-        var latitude = input_val[0].trim(); //纬度
-        var longitude = input_val[1].trim(); //经度
-        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
-            //只要其中有一个不是数值
-            $err_tip.html(err_tip).stop(true).fadeIn(100);
-            setTimeout(function () {
-                $err_tip.stop(true).fadeOut();
-            }, 5000);
-            return;
-        } else {
-            //都是数值类型
-            latitude = Number(latitude);
-            longitude = Number(longitude);
-            //判断值的范围
-            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
-                $err_tip.html(err_tip).stop(true).fadeIn(100);
-                setTimeout(function () {
-                    $err_tip.stop(true).fadeOut();
-                }, 5000);
-                return;
-            }
-
-            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
-            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
-        }
-    }
-    //输入符合要求才能执行下面代码
-    var latLng = {
-        lat: function lat() {
-            return latitude;
-        },
-        lng: function lng() {
-            return longitude;
-        }
-    };
-    operate_map.add_company_mark_repeat(company_id, latLng, window.company_markers);
-});
-
-//点击地名搜索
-$('#latlng_search .latlng_search i.sosuo').click(function (e) {
-    e.stopPropagation();
-    $('#latlng_search').submit(); //表单提交
-});
-
-var Is_auto_save = false; //是否是自动保存
-//点击保存按钮
-$('.box1 .home button.confirm').click(function (e) {
-    e.stopPropagation();
-    var send_data = []; //发送的数据
-    var $choose_station = $('#chosen_stations ul.stations_lists li.stations_list');
-    if ($choose_station.length == 0) {
-        return;
-    }
-    for (var i = 0; i < $choose_station.length; i++) {
-        var station_id = Number($choose_station.eq(i).attr('station_id'));
-        var station_ctime = Number($choose_station.eq(i).attr('ctime'));
-        for (var j = 0; j < window.markers.length; j++) {
-            var origin_station_id = window.markers[j].origin_station_id;
-            var _station_id = window.markers[j].station_id;
-            var latLng = window.markers[j].position;
-            if (station_id == _station_id) {
-                var data_tmp = {
-                    origin_station_id: origin_station_id,
-                    station_id: station_id,
-                    ctime: station_ctime,
-                    latLng: {
-                        lat: latLng.lat().toFixed(6),
-                        lng: latLng.lng().toFixed(6)
-                    }
-                };
-                send_data.push(data_tmp);
-                break;
-            }
-        }
-    };
-    //更新数据，保存
-    $('#zhezhao').fadeIn(1);
-    $.ajax({
-        url: '/myroute/save_update_data',
-        type: 'post',
-        data: {
-            xml_id: xml_id,
-            send_data: send_data
-        },
-        success: function success(res) {
-            $('#zhezhao').fadeOut(1);
-            if (res.msg == 'err' || res.msg == 'no') {
-                window.location = _setting.login_url;
-            } else if (res.msg == 'ok') {
-                var save_val = _i18next2.default.t('Saved');
-                $('.home span.save_tip').addClass('saved').attr('data-i18n', 'Saved').text(save_val);
-                //保存后，使源station_id与origin_station_id一致
-                var $table_tr = $('#company_stations tbody tr');
-                for (var i = 0; i < window.markers.length; i++) {
-                    window.markers[i].origin_station_id = window.markers[i].station_id;
-                }
-                for (var i = 0; i < window.company_markers.length; i++) {
-                    var _origin_station_id = window.company_markers[i].origin_station_id;
-                    var _station_id2 = window.company_markers[i].station_id;
-                    var _latLng = window.company_markers[i].getPosition();
-                    var myLatLng = {
-                        lat: parseInt(_latLng.lat() * 1000000) / 1000000,
-                        lng: parseInt(_latLng.lng() * 1000000) / 1000000
-                        //console.log(latLng,myLatLng)
-                    };for (var j = 0; j < $table_tr.length; j++) {
-                        var _station_id3 = $table_tr.eq(j).attr('station_id');
-                        if (_origin_station_id == _station_id3) {
-                            $table_tr.eq(j).attr('station_id', _station_id2);
-                            $table_tr.eq(j).find('td.station_addr').attr('title', myLatLng.lat + ',' + myLatLng.lng).text(myLatLng.lat + '\/' + myLatLng.lng);
-                            break;
-                        }
-                    }
-                    window.company_markers[i].origin_station_id = _station_id2;
-                };
-                //保存成功提示信息
-                var tip;
-                if (Is_auto_save) {
-                    //自动保存
-                    tip = _i18next2.default.t('Auto_save_success'); //提示信息
-                } else {
-                    tip = _i18next2.default.t('Save_success'); //提示信息
-                }
-                $('#save_success p.save_tip').text(tip);
-                $('#save_success').stop(true).fadeIn(1);
-                setTimeout(function () {
-                    $('#save_success').stop(true).fadeOut(1);
-                }, 2500);
-                Is_auto_save = false;
-            }
-        },
-        error: function error(err) {
-            if (err.status == 500) {
-                alert('server error,please operation later.');
-                window.location.reload();
-            }
-        }
-    });
-});
-//设置每10分钟自动保存
-setInterval(function () {
-    Is_auto_save = true;
-    $('#container .contain_left_top .confirm_box button.confirm').trigger('click');
-}, 600 * 1000);
-
-//点击展开方式
-$('.box1 .home .expand_style ul li').click(function (e) {
-    $(this).addClass('active').siblings().removeClass('active');
-    var li_index = $(this).index();
-    //展开方式默认为序号1
-    var expand_style_index = Number($(this).parent().attr('index'));
-    $(this).parent().attr('index', li_index);
-    if (li_index == 0) {
-        //展开所有栏位
-        $('#container .contain_left').css('opacity', '1');
-        $('#company_stations tfoot tr th').attr('colspan', '5');
-        if (expand_style_index == 1) {
-            //之前是隐藏了position
-            $('#company_stations thead tr th.postion').fadeIn(1);
-            $('#company_stations tbody tr td.station_addr').fadeIn(1);
-        } else if (expand_style_index == 2) {
-            //之前是全部收缩
-            $('#google_map_box').stop(true).animate({ width: '70%' }, 1500).siblings('.contain_left').stop(true).animate({ width: '30%' }, 1500, function () {
-                map_reset();
-            });
-        }
-    } else if (li_index == 1) {
-        //展开部分，但是position隐藏
-        $('#container .contain_left').css('opacity', '1');
-        $('#company_stations tfoot tr th').attr('colspan', '4');
-        $('#company_stations thead tr th.postion').fadeOut(1);
-        $('#company_stations tbody tr td.station_addr').fadeOut(1);
-        if (expand_style_index == 2) {
-            //之前是全部收缩
-            $('#google_map_box').stop(true).animate({ width: '70%' }, 1500).siblings('.contain_left').stop(true).animate({ width: '30%' }, 1500, function () {
-                map_reset();
-            });
-        }
-    } else if (li_index == 2) {
-        //全部收缩
-        $('#company_stations tfoot tr th').attr('colspan', '5');
-        $('#container .contain_left').stop(true).animate({ width: '0%' }, 1500).siblings('#google_map_box').stop(true).animate({ width: '100%' }, 1500, function () {
-            $('#container .contain_left').css('opacity', '0');
-            map_reset();
-        });
-        if (expand_style_index == 1) {
-            //展开部分，但是position隐藏
-            $('#company_stations thead tr th.postion').fadeIn(1);
-            $('#company_stations tbody tr td.station_addr').fadeIn(1);
-        }
-    }
-});
-
-//点击Reserve反向按钮
-$('#container .contain_left_top button.reverse').click(function (e) {
-    e.stopPropagation();
-    var $choose_station = $("#chosen_stations ul");
-    var stationsArray = $("#chosen_stations ul li.stations_list");
-    $choose_station.empty(); //清空
-    stationsArray.sort(function (a, b) {
-        //反向排序
-        return 1;
-    }).appendTo($choose_station);
-    //将里面的数字序号修改正确
-    for (var i = 0; i < $choose_station.find('li').length; i++) {
-        var $li = $choose_station.find('li').eq(i);
-        var station_index = i + 1;
-        if (station_index > 999) {
-            station_index = 999 + '+';
-        }
-        $li.find('span.station_num').text(station_index);
-    }
-    (0, _marker_drag.draw_line)(); //重新画线
-    (0, _company_station_pagination.click_station_delete)(); //使之能重新点击事件恢复
-    //通知为未保存状态
-    var save_val = _i18next2.default.t('UnSaved');
-    $('.home span.save_tip').removeClass('saved').attr('data-i18n', 'UnSaved').text(save_val);
-});
-
-//点击All stations show按钮，使所有站点都显示在地图上
-var bounds = new google.maps.LatLngBounds(); //缩放对象
-$('#container .contain_left_top button.all_stations_show').click(function (e) {
-    e.stopPropagation();
-    //设置最佳缩放级别
-    for (var i = 0; i < window.markers.length; i++) {
-        bounds.extend(window.markers[i].getPosition());
-    }
-    window.map.fitBounds(bounds);
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 97 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-
-var _setting = __webpack_require__(7);
-
-var _functions = __webpack_require__(6);
-
-var _i18next = __webpack_require__(4);
-
-var _i18next2 = _interopRequireDefault(_i18next);
-
-var _i18nextXhrBackend = __webpack_require__(5);
-
-var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
-
-var _search_place_name = __webpack_require__(32);
-
-var _marker_drag = __webpack_require__(30);
-
-var _table_filter = __webpack_require__(46);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-//对表格进行过滤
-
-//搜索城市名
-var url = (0, _functions.parseQueryString)(window.location.href); //routeMaker页面的脚本
-//公司站点分页脚本
-
-var route_id = url.xml_id;
-var company_id = Number(url.uid); //公司id
-
-/**构造函数
- * 
- * **/
-function Company_station() {
-    this.new_marker_stationID; //新增公司站点所在的站点id
-
-    /**获取数据库Company Station数据
-     * 
-     * city_name 城市名称，主要是用作设置滚动条位置
-     * **/
-    this.get_company_station = function (city_name) {
-        var that = this;
-        if (!route_id) {
-            return;
-        }
-        $('#zhezhao').fadeIn(1);
-        return new Promise(function (resolve, reject) {
-            $.ajax({
-                url: '/myroute/get_company_stations',
-                type: 'post',
-                data: {
-                    route_id: route_id
-                },
-                success: function (res, status) {
-                    if (res.msg == 'ok') {
-                        $('#company_stations tbody').html(''); //清空表格
-                        var getData = res.data;
-                        var stations_num = res.dataLen; //公司站点的总数目
-                        if (getData.length === 0) {
-                            $('#company_stations tfoot').fadeIn(1);
-                            reject('error');
-                            return;
-                        } else {
-                            $('#company_stations tfoot').fadeOut(1);
-                        }
-                        $('#search_station_numbers').text(stations_num);
-                        that.createTable(getData, city_name); //创建表格
-                        if (that.new_marker_stationID) {
-                            //如果是新增站点
-                            //排序
-                            that.sort_company_markers(getData);
-                        }
-                        resolve(getData);
-                        $('#zhezhao').fadeOut(1);
-                    } else if (res.msg == 'err' || res.msg == 'no') {
-                        window.location = _setting.login_url; //跳转
-                    }
-                }.bind(this),
-                error: function error(err) {
-                    if (err.status == 500) {
-                        alert('server error,please try again later.');
-                    }
-                }
-            });
-        });
-    };
-
-    //添加公司下所有站点数据,push(window.company_markers)
-    this.add_all_stations = function (company_stationsData) {
-        for (var i = 0; i < company_stationsData.length; i++) {
-            var addr_content = company_stationsData[i].addr_content;
-            var latLng = {
-                lat: Number(company_stationsData[i].lat),
-                lng: Number(company_stationsData[i].lng)
-            };
-            var marker = new google.maps.Marker({
-                //map:map,
-                position: latLng,
-                addr_content: (0, _functions.htmlspecialchars_decode)(addr_content),
-                station_id: company_stationsData[i].station_id,
-                origin_station_id: company_stationsData[i].station_id, //初始的station_id
-                station_name: company_stationsData[i].stations_name
-            });
-            window.company_markers.push(marker);
-        }
-    };
-
-    /**分页码
-     * totalPage 表示总页码数
-     * currenPage 表示当前页码
-     * count  表示显示的个数
-     * **/
-    /* this.split_page = function(totalPage,currentPage=1,count=5){
-        var that = this;
-        $('#pageShow .Page').pagination({
-            totalPage: totalPage,   // 总页数
-            currentPage: currentPage,  // 当前页数
-            isShow: true,    // 是否显示首尾页
-            count: count,        // 显示个数
-            homePageText: 'Start',  // 首页文本
-            endPageText: 'End',   // 尾页文本
-            prevPageText: "<<",// 上一页文本
-            nextPageText: ">>",// 下一页文本
-            callback: function(current) {  // 回调,current(当前页数)
-                //1. 获取当前页数和总页数
-                //var info=$("#pageShow .Page").pagination("getPage");// 获取当前页数和总页数
-                //$('#currentPage').text(info.current);
-                //$('#totalPage').text(info.total); 
-                //重新生成表格
-                that.get_company_station(that.nums_limit,current);
-            }
-        });
-        var $page=$('#pageShow .Page .ui-pagination-container a');
-        //为每个页码添加data-i18n属性
-        for(let i=0; i<$page.length; i++){
-            var text=$page.eq(i).text();
-            $page.eq(i).attr('data-i18n',text);
-            var i18n_text=i18next.t(text);
-            $page.eq(i).text(i18n_text);
-        }
-    }; */
-
-    //生成表格数据
-    this.createTable = function (getData, init_city_name) {
-        $('#marked_stations').scrollTop(0); //置顶
-        $('#company_stations tbody').html(''); //清空
-        var scroll_index;
-        for (var i = 0; i < getData.length; i++) {
-            var latLng = {
-                lat: Number(getData[i].lat),
-                lng: Number(getData[i].lng)
-            };
-            var station_id = getData[i].station_id;
-            var station_name = getData[i].stations_name;
-            var city_name = getData[i].city_name;
-            var tr = '<tr class=\'company_station\' station_id=\'' + station_id + '\'>\n                        <td class=\'index\' title="' + (i + 1 > 99 ? i + 1 : '') + '">' + (i + 1 > 99 ? '99+' : i + 1) + '</td>\n                        <td class="station_city" title="' + city_name + '">' + city_name + '</td>\n                        <td class="station_name" title="' + station_name + '">' + station_name + '</td>\n                        <td class="station_addr" title="' + latLng.lat + ',' + latLng.lng + '">' + latLng.lat + '/' + latLng.lng + '</td>\n                        <td class="action">\n                            <i class="icon route_iconfont route_icon-iconfontadd add"></i>\n                            <!--<i class="icon route_iconfont route_icon-shanchu delete"></i>\n                            <i class="icon route_iconfont route_icon-bianji1 edit"></i>-->\n                        </td>\n                    </tr>';
-            $('#company_stations tbody').append($(tr));
-            if (init_city_name == city_name) {
-                scroll_index = i;
-            }
-            var tr_length = $('#company_stations tbody tr').length;
-            //为其添加已添加过的样式
-            for (var j = 0; j < window.markers.length; j++) {
-                var _station_id = window.markers[j].origin_station_id;
-                if (station_id == _station_id) {
-                    $('#company_stations tbody tr').eq(tr_length - 1).addClass('chosen').children('td.action').find('i.add,i.delete').fadeOut(1); //添加和删除操作隐藏
-                    break;
-                }
-            }
-        }
-        //展开方式
-        var expand_style = Number($('.box1 .home .expand_style ul').attr('index'));
-        if (expand_style == 1) {
-            //需要隐藏position
-            $('#company_stations thead tr th.postion').fadeOut(1);
-            $('#company_stations tbody tr td.station_addr').fadeOut(1);
-        } else {
-            $('#company_stations thead tr th.postion').fadeIn(1);
-            $('#company_stations tbody tr td.station_addr').fadeIn(1);
-        }
-
-        if (scroll_index) {
-            var td_height = $('#company_stations tbody tr').eq(0).height();
-            var scroll_h = td_height * scroll_index;
-            $('#marked_stations .data_box').scrollTop(scroll_h);
-        }
-        this.station_operation();
-        //表格搜索过滤
-        (0, _table_filter.filterTable)();
-    }.bind(this);
-
-    //当新增公司站点时，需要对compant_markers进行排序
-    this.sort_company_markers = function (getData) {
-        var marker_index;
-        var company_markers_len = getData.length; //公司站点个数
-        for (var i = 0; i < getData.length; i++) {
-            var station_id = getData[i].station_id;
-            if (station_id == this.new_marker_stationID) {
-                marker_index = i;
-                break;
-            }
-        };
-        var marker = window.company_markers.splice(company_markers_len - 1, 1)[0];
-        window.company_markers.splice(marker_index, 0, marker);
-        //触发点击该增加按钮,使之新增加的站点直接加到该路线中
-        var $table_tr = $('#company_stations tbody tr');
-        for (var i = 0; i < $table_tr.length; i++) {
-            var _station_id2 = $table_tr.eq(i).attr('station_id');
-            if (this.new_marker_stationID == _station_id2) {
-                $table_tr.eq(i).find('td.action i.add').trigger('click');
-                break;
-            }
-        }
-    };
-
-    //表格里的操作按钮
-    this.station_operation = function () {
-        var that = this;
-
-        //点击Operation的+号按钮
-        $('#company_stations tbody tr.company_station td.action i.add').unbind('click');
-        $('#company_stations tbody tr.company_station td.action i.add').bind('click', function (e) {
-            e.stopPropagation();
-            var $that = $(this);
-            var origin_station_id = Number($(this).parent().parent().attr('station_id')); //原始的station_id
-            var city_name = $(this).parent().siblings('td.station_city').text(); //城市名
-            city_name = city_name.split(',').length > 1 ? city_name.split(',')[1] : city_name;
-            var station_id;
-            for (var i = 0; i < window.company_markers.length; i++) {
-                var li_station_id = company_markers[i].origin_station_id;
-                if (origin_station_id == li_station_id) {
-                    station_id = company_markers[i].station_id;
-                    break;
-                }
-            }
-            var isAdded = $(this).parent().parent().hasClass('chosen'); //是否已添加过了
-            if (isAdded) {
-                //查找是否已经添加该站点
-                var $choose_stations = $('#chosen_stations ul li.stations_list');
-                for (var i = 0; i < $choose_stations.length; i++) {
-                    var li_station_id = Number($choose_stations.eq(i).attr('station_id'));
-                    if (li_station_id == station_id) {
-                        $('#marked_stations p.err_tip').stop(true).fadeIn(1);
-                        setTimeout(function () {
-                            $('#marked_stations p.err_tip').stop(true).fadeOut(1);
-                        }, 1500);
-                        return;
-                    }
-                }
-            } else {
-                if (!($('#zhezhao').css('display') == 'block')) {
-                    //如果是隐藏的
-                    $('#zhezhao').fadeIn(1);
-                }
-                var station_ctime = new Date().getTime().toString(); //路线新增站点时间
-                var station_name = $(this).parent().siblings('td.station_name').text();
-                $.ajax({
-                    url: '/myroute/route_add_station',
-                    type: 'post',
-                    data: {
-                        route_id: route_id,
-                        station_id: origin_station_id,
-                        station_ctime: station_ctime
-                    },
-                    success: function success(res) {
-                        $('#zhezhao').fadeOut(1);
-                        if (res.msg == 'err' || res.msg == 'no') {
-                            window.location = _setting.login_url;
-                        } else if (res.msg == 'ok') {
-                            //没有这个xml_id
-                            $that.parent().parent().addClass('chosen'); //添加背景选中颜色
-                            $that.parent().find('i.add').fadeOut(1); //添加和删除操作隐藏
-                            var station_index = $('#chosen_stations ul li.stations_list').length + 1; //站点序号
-                            if (station_index > 999) {
-                                station_index = 999 + '+';
-                            }
-                            var chosen_station = '<li class="stations_list" station_id=\'' + origin_station_id + '\' ctime=\'' + station_ctime + '\'>\n                                                    <i class="icon route_iconfont route_icon-paixu"></i>\n                                                    <span class="station_num">' + station_index + '&middot;</span>\n                                                    <span class="station_name">' + station_name + '</span>\n                                                    <span class="station_city">' + city_name + '</span>\n                                                    <i class="icon route_iconfont route_icon-shanchu delete"></i>\n                                                </li>';
-                            $('#chosen_stations ul').append(chosen_station);
-                            for (var i = 0; i < window.company_markers.length; i++) {
-                                var li_station_id = Number(company_markers[i].station_id);
-                                if (station_id == li_station_id) {
-                                    var latLng = company_markers[i].position;
-                                    var addr_content = company_markers[i].addr_content;
-                                    var _station_name = company_markers[i].station_name;
-                                    company_markers[i].setMap(null);
-                                    var marker = new google.maps.Marker({
-                                        map: map,
-                                        position: latLng,
-                                        addr_content: addr_content,
-                                        station_id: origin_station_id,
-                                        origin_station_id: origin_station_id,
-                                        station_name: _station_name,
-                                        draggable: true
-                                    });
-                                    map.setCenter(latLng); //设置中心点
-                                    (0, _marker_drag.marker_drag_ev)(marker); //使标记可拖拽
-                                    window.markers.push(marker);
-                                    window.marker_click(marker);
-                                    break;
-                                }
-                            }
-
-                            (0, _marker_drag.draw_line)(); //画折线
-                            click_station_delete(); //点击选中的删除小图标
-                            sortable_chosen_station(route_id);
-                        }
-                    },
-                    error: function error(err) {
-                        if (err.status == 500) {
-                            alert('server error,please operation later.');
-                            window.location.reload();
-                        }
-                    }
-                });
-            }
-        });
-    };
-
-    //获取该路线下已添加过的站点
-    this.get_route_stations = function (callback) {
-        $('#zhezhao').fadeIn(1);
-        $.ajax({
-            url: '/myroute/get_route_stations', //获取该路线下添加的站点
-            type: 'post',
-            async: false,
-            data: {
-                xml_id: route_id
-            },
-            success: function success(res) {
-                $('#zhezhao').fadeOut(1);
-                if (res.msg == 'err') {
-                    window.location = _setting.login_url;
-                } else if (res.msg == 'ok') {
-                    var stations_data = res.data; //已添加站点数据
-                    for (var i = 0; i < stations_data.length; i++) {
-                        var ctime = stations_data[i].ctime; //已选站点的添加时间
-                        var station_id = stations_data[i].station_id;
-                        var lat = Number(stations_data[i].lat);
-                        var lng = Number(stations_data[i].lng);
-                        var latLng = {
-                            lat: lat,
-                            lng: lng
-                        };
-                        var station_name = (0, _functions.htmlspecialchars_decode)(stations_data[i].stations_name);
-                        var addr_content = (0, _functions.htmlspecialchars_decode)(stations_data[i].addr_content);
-                        var city_name = (0, _functions.htmlspecialchars_decode)(stations_data[i].city_name);
-                        city_name = city_name.split(',').length > 1 ? city_name.split(',')[1] : city_name;
-
-                        var marker = new google.maps.Marker({
-                            //map : map,
-                            position: latLng,
-                            addr_content: addr_content,
-                            station_id: station_id,
-                            origin_station_id: station_id, //初始的station_id
-                            station_name: station_name,
-                            draggable: true
-                        });
-                        marker.setMap(map);
-                        (0, _marker_drag.marker_drag_ev)(marker); //使标记可拖拽
-                        window.markers.push(marker); //添加marker
-                        //console.log(markers);
-                        window.marker_click(marker); //标记点点击事件
-
-                        var station_index = i + 1; //站点序号
-                        if (station_index > 999) {
-                            station_index = 999 + '+';
-                        }
-                        var chosen_station = '<li class="stations_list" station_id=\'' + station_id + '\' ctime=\'' + ctime + '\'>\n                                                <i class="icon route_iconfont route_icon-paixu"></i>\n                                                <span class="station_num">' + station_index + '.</span>\n                                                <span class="station_name" title=\'' + station_name + '\'>' + station_name + '</span>\n                                                <span class="station_city" title=\'' + city_name + '\'>' + city_name + '</span>\n                                                <i class="icon route_iconfont route_icon-shanchu delete"></i>\n                                            </li>';
-                        $('#chosen_stations ul').append(chosen_station);
-                        var $table_body = $('#company_stations tbody tr.company_station');
-                        for (var j = 0; j < $table_body.length; j++) {
-                            var li_station_id = Number($table_body.eq(j).attr('station_id'));
-                            if (station_id == li_station_id) {
-                                $table_body.eq(j).addClass('chosen'); //增加添加过的样式
-                                break;
-                            }
-                        }
-                    }
-                    (0, _marker_drag.draw_line)();
-                    click_station_delete();
-                }
-            },
-            error: function error(err) {
-                if (err.status == 500) {
-                    alert('server error,please try later.');
-                }
-            }
-        });
-    };
-
-    //向后台请求新增公司站点
-    this.add_station_req = function (marker, station_name, addr_content, ret_data, city_name) {
-        $('#zhezhao').fadeIn(1);
-        var that = this;
-        $.ajax({
-            url: '/myroute/add_station',
-            type: 'post',
-            data: {
-                xml_id: route_id,
-                ctime: new Date().getTime(),
-                station_id: ret_data.station_id,
-                stations_name: (0, _functions.htmlspecialchars)(station_name),
-                addr_content: (0, _functions.htmlspecialchars)(addr_content),
-                latLng: ret_data.latLng,
-                city_name: (0, _functions.htmlspecialchars)(city_name)
-            },
-            success: function success(res) {
-                //$('#zhezhao').fadeOut(1);
-                if (res.msg == 'err') {
-                    window.location.reload();
-                } else if (res.msg == 'has') {
-                    //站点名存在提示信息
-                    $('#zhezhao').fadeOut(1);
-                    var modify_tip = _i18next2.default.t('Station_name_exists');
-                    var $err_tip = $('#marker_name .my_inp p.err_tip,#myModal .modal-body p.err_tip');
-                    $err_tip.text(modify_tip).stop(true).fadeIn(100);
-                    setTimeout(function () {
-                        $err_tip.stop(true).slideUp();
-                    }, 2000);
-                } else if (res.msg == 'ok') {
-                    $('#place_input').val(''); //清空地名输入框
-                    $('#jingweidu_search input.search_place').val(''); //清空经纬度输入框
-                    $('#myModal').fadeOut(1).modal('hide');
-                    $('#marker_name').fadeOut(1).find('input.mark_name').val(''); //标记命名隐藏
-                    company_markers.push(marker);
-                    marker.setMap(map);
-                    (0, _marker_drag.marker_drag_ev)(marker, true); //使标记可拖拽
-                    //重新生成表格
-                    that.get_company_station(city_name); //重新生成表格
-                    that.new_marker_stationID = ret_data.station_id;
-                }
-            },
-            error: function error(err) {
-                if (err.status == 500) {
-                    alert('server error,please operation later.');
-                }
-            }
-        });
-    };
-}
-
-//点击Chosen Station 每个站点的删除图标、查看城市名按钮
-function click_station_delete() {
-    //点击被选中的站点的删除按钮
-    $('#chosen_stations ul li.stations_list i.delete').unbind('click');
-    $('#chosen_stations ul li.stations_list i.delete').bind('click', function (e) {
-        e.stopPropagation();
-        var station_id = Number($(this).parent().attr('station_id'));
-        var origin_station_id;
-        for (var i = 0; i < window.markers.length; i++) {
-            var _origin_station_id = markers[i].origin_station_id;
-            var _station_id = markers[i].station_id;
-            if (station_id == _station_id) {
-                origin_station_id = _origin_station_id;
-                break;
-            }
-        }
-        var _this = $(this);
-        $('#myModal_delete').modal('show'); //删除模态框出现
-        //点击模态框的确定按钮
-        $('#myModal_delete .modal-footer button.confirm').unbind('click');
-        $('#myModal_delete .modal-footer button.confirm').bind('click', function (e) {
-            e.stopPropagation();
-            $('#zhezhao').fadeIn(1);
-            $('#myModal_delete').modal('hide'); //删除模态框隐藏
-            var route_id = (0, _functions.parseQueryString)(window.location.href).xml_id;
-            $.ajax({
-                url: '/myroute/route_delete_station',
-                type: 'post',
-                data: {
-                    route_id: route_id, station_id: origin_station_id
-                },
-                success: function success(res) {
-                    $('#zhezhao').fadeOut(1);
-                    if (res.msg == 'err' || res.msg == 'no') {
-                        //没有这个xml_id或者无session
-                        window.location = _setting.login_url;
-                    } else if (res.msg == 'ok') {
-                        //从markers中删除
-                        for (var i = 0; i < window.markers.length; i++) {
-                            var li_station_id = Number(window.markers[i].station_id);
-                            if (station_id == li_station_id) {
-                                google.maps.event.clearInstanceListeners(markers[i]); //清除该实例的所有监听事件
-                                window.markers.splice(i, 1);
-                                clearMarkers_clusterer(window.markers);
-                                break;
-                            }
-                        }
-                        //删除公司选中站点的样式
-                        var $table_body = $('#company_stations tbody tr.company_station');
-                        for (var j = 0; j < $table_body.length; j++) {
-                            var li_station_id = Number($table_body.eq(j).attr('station_id'));
-                            if (origin_station_id == li_station_id) {
-                                $table_body.eq(j).removeClass('chosen'); //增加添加过的样式
-                                $table_body.eq(j).find('td.action i').fadeIn(1); //增加添加过的样式
-                                break;
-                            }
-                        }
-                        _this.parent().remove();
-                        (0, _marker_drag.draw_line)(); //画折线
-                    }
-                },
-                error: function error(err) {
-                    if (err.status == 500) {
-                        alert('server error,please operation later.');
-                        window.location.reload();
-                    }
-                }
-            });
-        });
-    });
-
-    //点击该站点这一列,使之位于地图中心点
-    $('#chosen_stations ul li.stations_list').unbind('click');
-    $('#chosen_stations ul li.stations_list').bind('click', function (e) {
-        e.stopPropagation();
-        window.map.setZoom(17);
-        var station_id = $(this).attr('station_id');
-        for (var i = 0; i < window.markers.length; i++) {
-            var _station_id = window.markers[i].station_id;
-            if (station_id == _station_id) {
-                var position = window.markers[i].getPosition();
-                window.map.setCenter(position);
-                break;
-            }
-        }
-    });
-}
-
-//对Chosen Stations数据库排序
-function sortable_chosen_station(xml_id) {
-    //按照Choosen Station顺序排列
-    var send_data = { //发送的数据
-        route_id: xml_id,
-        stations: []
-    };
-    var $choose_station = $('#chosen_stations ul.stations_lists li.stations_list');
-    /* for(var i=0; i<$choose_station.length; i++){
-        var station_id=Number($choose_station.eq(i).attr('station_id'));
-        var station_ctime=Number($choose_station.eq(i).attr('ctime'));
-        for(var j=0; j<window.markers.length; j++){
-            let origin_station_id=window.markers[j].origin_station_id;
-            let _station_id = window.markers[j].station_id;
-            if(station_id== _station_id){
-                station_id = origin_station_id;
-                break;
-            }
-        }
-        let temp_obj={
-            station_id,
-            ctime:station_ctime
-        }
-        send_data.stations.push(temp_obj);
-    }; */
-    for (var i = 0; i < window.markers.length; i++) {
-        var origin_station_id = window.markers[i].origin_station_id;
-        var station_ctime = Number($choose_station.eq(i).attr('ctime'));
-
-        var temp_obj = {
-            station_id: origin_station_id,
-            ctime: station_ctime
-        };
-        send_data.stations.push(temp_obj);
-    }
-
-    /* if(send_data.stations.length <2){  //一个以上才需要排序
-        return;
-    } */
-    $('#zhezhao').fadeIn(1);
-    //请求更新排序
-    $.ajax({
-        url: '/myroute/sortable_station',
-        type: 'post',
-        data: {
-            send_data: send_data
-        },
-        success: function success(res) {
-            $('#zhezhao').fadeOut(1);
-            if (res.msg == 'err' || res.msg == 'no') {
-                window.location = _setting.login_url;
-            } else if (res.msg == 'ok') {
-                (0, _marker_drag.draw_line)();
-            }
-        },
-        error: function error(err) {
-            if (err.status == 500) {
-                alert('server error,please try later.');
-                window.location.reload();
-            }
-        }
-    });
-}
-
-//对输入的经纬数据进行检测
-function cheek_input_latlng(element) {
-    var input_val = element.find('input.lat_lng').val().trim();
-    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
-    var $err_tip = element.find('p.err_tip');
-    input_val = input_val.split(','); //分成数组
-    if (input_val.length != 2) {
-        return false;
-    } else {
-        var latitude = input_val[0].trim(); //纬度
-        var longitude = input_val[1].trim(); //经度
-        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
-            //只要其中有一个不是数值
-            return false;
-        } else {
-            //都是数值类型
-            latitude = Number(latitude);
-            longitude = Number(longitude);
-            //判断值的范围
-            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
-                return false;
-            }
-
-            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
-            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
-        }
-    }
-    //输入符合要求才能执行下面代码
-    var latLng = {
-        lat: function lat() {
-            return latitude;
-        },
-        lng: function lng() {
-            return longitude;
-        }
-    };
-    return latLng;
-}
-
-module.exports = {
-    Company_station: Company_station,
-    click_station_delete: click_station_delete
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 98 */
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 99 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-
-var _i18next = __webpack_require__(4);
-
-var _i18next2 = _interopRequireDefault(_i18next);
-
-var _i18nextXhrBackend = __webpack_require__(5);
-
-var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
-
-var _pagination = __webpack_require__(23);
-
-var _functions = __webpack_require__(6);
-
-var _ContextMenu = __webpack_require__(33);
-
-var _marker_drag = __webpack_require__(30);
-
-var _search_place_name = __webpack_require__(32);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var pinyin = __webpack_require__(100); //将汉字转为拼音
-//输入框名字
-//得到站点id和经纬度
-
-
-var company_id = Number((0, _functions.parseQueryString)(window.location.href).uid); //公司id
-
-var uluru = { lat: 30.936986, lng: 113.914559 }; //湖北工程学院地理位置
-
-window.map = new google.maps.Map(document.getElementById('google_map'), {
-    zoom: 6,
-    center: uluru,
-    streetViewControl: true,
-    rotateControl: true,
-    scaleControl: true
-});
-if (navigator.geolocation) {
-    var options = {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-    };
-    navigator.geolocation.getCurrentPosition(function (position) {
-        // var place =map.getCenter();  //获取位置  http协议下无效
-        var lat = parseInt(position.coords.latitude * 1000000) / 1000000;
-        var lng = parseInt(position.coords.longitude * 1000000) / 1000000;
-        // var lat =place.lat()+2;
-        // var lng =place.lng()+3;
-        uluru.lat = lat;
-        uluru.lng = lng;
-
-        window.map.setCenter(uluru);
-        new google.maps.Marker({
-            map: map,
-            position: uluru
-        });
-    }, function (err) {
-        console.log(err);
-    }, options);
-}
-
-//新的构造器对象
-//var map_context_menu=new ContextMenu(map);
-
-//标记聚类
-window.markerClusterer = new MarkerClusterer(map, markers, {
-    imagePath: '/myroute/libs/images/m'
-});
-
-window.infoWindow = new google.maps.InfoWindow(); //窗口提示
-window.search_tmp_marker; //搜索时的临时点，点击确定或者重新搜索会被替换掉
-//地址搜索控件
-window.map_input = /** @type {!HTMLInputElement} */document.getElementById('place_input');
-//map.controls[google.maps.ControlPosition.TOP_LEFT].push(map_input);
-//根据地名搜索经纬度
-$('#latlng_search').submit(function (e) {
-    e.preventDefault(); //阻止对表单的提交
-    var place_name = $('#latlng_search .latlng_search input.input_addr').val().trim();
-    (0, _search_place_name.search_latlng)(place_name).then(function (latLng) {
-        var lat_lng = {
-            lat: function lat() {
-                return latLng.lat.toFixed(6);
-            },
-            lng: function lng() {
-                return latLng.lng.toFixed(6);
-            }
-        };
-        map.setCenter(latLng);
-        map.setZoom(20); // Why 17? Because it looks good.当20时可以放大到10米的比例尺
-        $('#myModal').modal('show');
-        $('#myModal .modal-body input.mark_name').val(''); //清空名称
-        //点击模态框的No
-        $('#myModal button.cancel').unbind('click');
-        $('#myModal button.cancel').bind('click', function (e) {
-            e.stopPropagation();
-            $('#myModal').modal('hide');
-        });
-        //点击模态框的Yes
-        place_name = pinyin(place_name, {
-            style: pinyin.STYLE_NORMAL
-        }).join('');
-        $('#myModal .modal-body input.mark_name').val(place_name);
-        $('#myModal button.confirm').unbind('click');
-        $('#myModal button.confirm').bind('click', function (e) {
-            e.stopPropagation();
-            var check_input_filename = (0, _pagination.input_check_fun)($('#myModal .modal-body input.mark_name'), 1000);
-            if (!check_input_filename) {
-                //不满足输入条件
-                return;
-            }
-            var input_val = $('#myModal input.mark_name').val().trim();
-            $('#myModal').modal('hide');
-            var addr_content = '<div><strong>' + input_val + '</strong><br>' + input_val + '</div>';
-            //新标记
-            var ret_data = (0, _functions.cal_station_id)(company_id, lat_lng, company_markers);
-            //console.log(ret_data)
-            if (!ret_data) {
-                //如果返回false
-                var tip_err = _i18next2.default.t('Mark_near');
-                $('#myModal .modal-body p.err_tip').text(tip_err).fadeIn(1);
-                setTimeout(function () {
-                    $('#myModal .modal-body p.err_tip').text('').fadeOut(1);
-                }, 2000);
-                return;
-            }
-
-            //删除之前的临时标记
-            if (window.search_tmp_marker) {
-                search_tmp_marker.setMap(null);
-            }
-
-            //表示下面开始添加标记
-            var station_id = ret_data.station_id; //站点id
-            var marker = new google.maps.Marker({
-                //map: map,
-                addr_content: addr_content,
-                station_id: ret_data.station_id,
-                origin_station_id: ret_data.station_id, //初始的station_id
-                station_name: input_val,
-                draggable: true
-            });
-            marker.setPosition(ret_data.latLng);
-            (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
-                //公司新增站点请求
-                window.my_company_stations.add_station_req(marker, input_val, addr_content, ret_data, city_name);
-            });
-        });
-    }, function (msg) {
-        if (msg == 'err') {
-            alert("google api service error,plese try again,or this place can't be found.");
-        }
-    });
-});
-
-//刷新聚类标记
-window.clearMarkers_clusterer = function (this_markers) {
-    //清除所有的标记
-    if (markerClusterer) {
-        //相当于刷新了标记聚类
-        markerClusterer.clearMarkers();
-        markerClusterer = new MarkerClusterer(map, this_markers, {
-            imagePath: '/myroute/libs/images/m'
-            //maxZoom:20,  #最大放大
-            //gridSize: size, 
-        });
-    }
-};
-
-//在地图上鼠标右键菜单出现
-var marker_station_id; //标记序列号;  //删除标记的序列号
-map.addListener('click', function (e) {
-    $('#map_menu').fadeOut(1);
-});
-
-map.addListener('rightclick', function (e) {
-    marker_station_id = -1;
-    var latLng = e.latLng; //地理经纬度
-    $('#map_menu ul.menu_lists li.add').fadeIn(1);
-    $('#map_menu ul.menu_lists li.delete').fadeOut(1);
-    map_menu_position(e); //菜单显示
-    menu_click(latLng);
-});
-
-//添加标记复用代码
-function add_company_mark_repeat(company_id, latLng, company_markers) {
-    var ret_data = (0, _functions.cal_station_id)(company_id, latLng, company_markers);
-    if (!ret_data) {
-        //如果返回false
-        var p_tip = '<p class="add_mark_tip">There is a tag that is too small for this tag.</p>';
-        $('#place_input').after($(p_tip)).siblings('p.add_mark_tip').animate({ top: 15 }, 1000, function () {
-            setTimeout(function () {
-                $('#google_map_box p.add_mark_tip').remove();
-            }, 2000);
-        });
-        return;
-    };
-    //获取该经纬度所在地点名称
-    (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
-        $('#marker_name').fadeIn() //标记命名显示
-        .find('.my_inp input.mark_name').val(city_name);
-    });
-    //点击命名确定
-    $('#marker_name .my_btn button.confirm').unbind('click');
-    $('#marker_name .my_btn button.confirm').bind('click', function (e) {
-        e.stopPropagation();
-        var check_input_filename = (0, _pagination.input_check_fun)($('#marker_name .my_inp input.mark_name'), 1000);
-        if (!check_input_filename) {
-            //不满足输入条件
-            return;
-        }
-        //满足条件增加标记
-        var input_val = $('#marker_name .my_inp input.mark_name').val().trim();
-        var addr_content = '<div><strong>' + input_val + '</strong><br></div>';
-        var marker = new google.maps.Marker({
-            //map:map,
-            position: ret_data.latLng,
-            addr_content: addr_content,
-            station_id: ret_data.station_id,
-            origin_station_id: ret_data.station_id, //初始的station_id
-            station_name: input_val,
-            draggable: true
-        });
-        map.setCenter(ret_data.latLng);
-        (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
-            //公司新增站点请求
-            window.my_company_stations.add_station_req(marker, input_val, addr_content, ret_data, city_name);
-        });
-    });
-}
-//地图菜单选项点击事件
-function menu_click(latLng) {
-    //点击菜单选项，添加标记
-    $('#map_menu ul li.add').unbind('click');
-    $('#map_menu ul li.add').bind('click', function (e) {
-        e.stopPropagation();
-        $('#map_menu').fadeOut(1);
-        //添加标记
-        add_company_mark_repeat(company_id, latLng, window.company_markers);
-    });
-    //删除标记
-    $('#map_menu ul li.delete').unbind('click');
-    $('#map_menu ul li.delete').bind('click', function (e) {
-        e.stopPropagation();
-        $('#map_menu').fadeOut(1);
-        if (marker_station_id == -1) return;
-        $('#myModal_delete').modal('show'); //删除模态框出现
-        //点击模态框的确定按钮
-        $('#myModal_delete .modal-footer button.confirm').unbind('click');
-        $('#myModal_delete .modal-footer button.confirm').bind('click', function (e) {
-            e.stopPropagation();
-            $('#zhezhao').fadeIn(1);
-            $('#myModal_delete').modal('hide'); //删除模态框隐藏
-            var route_id = (0, _functions.parseQueryString)(window.location.href).xml_id;
-
-            for (var i = 0; i < markers.length; i++) {
-                if (marker_station_id == markers[i].origin_station_id) {
-                    var station_id = markers[i].station_id; //站点id
-                    $.ajax({
-                        url: '/myroute/route_delete_station',
-                        type: 'post',
-                        async: false,
-                        data: {
-                            route_id: route_id, station_id: marker_station_id
-                        },
-                        success: function success(res) {
-                            $('#zhezhao').fadeOut(1);
-                            if (res.msg == 'err' || res.msg == 'no') {
-                                //没有这个xml_id或者无session
-                                window.location = login_url;
-                            } else if (res.msg == 'ok') {
-                                google.maps.event.clearInstanceListeners(markers[i]); //清除该实例的所有监听事件
-                                //移除该标记
-                                markers[i].setMap(null);
-                                markers.splice(i, 1);
-                                //刷新聚类标记
-                                clearMarkers_clusterer(window.markers);
-                                //... 左边栏的对应公司站点已选择样式也要删除
-                                var $table_body = $('#company_stations tbody tr.company_station');
-                                for (var j = 0; j < $table_body.length; j++) {
-                                    var li_station_id = Number($table_body.eq(j).attr('station_id'));
-                                    if (marker_station_id == li_station_id) {
-                                        $table_body.eq(j).removeClass('chosen'); //增加添加过的样式
-                                        $table_body.eq(j).find('td.action i').fadeIn(1); //增加添加过的样式
-                                        break;
-                                    }
-                                }
-                                //... 左边栏的对应所选站点也要删除
-                                var $choose_stations = $('#chosen_stations ul li.stations_list');
-                                for (var j = 0; j < $choose_stations.length; j++) {
-                                    var li_station_id = Number($choose_stations.eq(j).attr('station_id'));
-                                    if (li_station_id == station_id) {
-                                        $choose_stations.eq(j).remove();
-                                        break;
-                                    }
-                                }
-                                (0, _marker_drag.draw_line)(); //重新画线
-                            }
-                        },
-                        error: function error(err) {
-                            if (err.status == 500) {
-                                alert('server error,please operation later.');
-                                window.location.reload();
-                            }
-                        }
-                    });
-                    break;
-                }
-            }
-        });
-    });
-}
-
-//地图菜单选项出现的位置
-var map_menu_position = function map_menu_position(e) {
-    //菜单位置显示
-    var top = e.pixel.y; //顶部距离
-    var left = e.pixel.x; //左边距离
-
-    var map_width = $('#google_map').width(); //地图宽度
-    var map_height = $('#google_map').height();
-    var menu_width = $('#map_menu').width(); //菜单宽度
-    var menu_height = $('#map_menu').height();
-
-    if (top > map_height - menu_height) {
-        top = map_height - menu_height;
-    }
-    if (left > map_width - menu_width) {
-        left = map_width - menu_width;
-    }
-    $('#map_menu').css({ top: top, left: left }).fadeIn(1);
-    //添加标记
-};
-
-//标记的点击和右击事件
-window.marker_click = function (marker) {
-    var map_width = $('#google_map').width(); //地图宽度
-    var menu_width = $('#map_menu').width(); //菜单宽度
-
-    /* marker.addListener('click',function(e){
-        var addr_cont=this.addr_content; //地址
-        infoWindow.setContent(addr_cont);
-        infoWindow.open(map, marker);
-    }); */
-    marker.addListener('mouseover', function (e) {
-        var addr_cont = this.addr_content; //地址
-        infoWindow.setContent(addr_cont);
-        infoWindow.open(map, marker);
-    });
-    marker.addListener('rightclick', function (e) {
-        //var position=map_context_menu.getProjection().fromLatLngToDivPixel(e.latLng);
-        var position = (0, _ContextMenu.fromLatLngToPixel)(e.latLng, map);
-        e.pixel = {};
-        e.pixel.x = Math.round(position.x);
-        e.pixel.y = Math.round(position.y);
-        map_menu_position(e); //菜单出现的位置
-        $('#map_menu ul.menu_lists li.add').fadeOut(1);
-        $('#map_menu ul.menu_lists li.delete').fadeIn(1);
-        marker_station_id = this.origin_station_id;
-        var latLng = e.latLng;
-        menu_click(latLng);
-    });
-    //刷新聚类标记
-    clearMarkers_clusterer(window.markers);
-};
-
-module.exports = {
-    add_company_mark_repeat: add_company_mark_repeat
-};
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-/* 100 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10560,8 +9092,8 @@ function buildPinyinCache(dict_combo){
   return uncomboed;
 }
 
-const PINYIN_DICT = buildPinyinCache(__webpack_require__(101));
-const Pinyin = __webpack_require__(102);
+const PINYIN_DICT = buildPinyinCache(__webpack_require__(48));
+const Pinyin = __webpack_require__(49);
 const pinyin = new Pinyin(PINYIN_DICT);
 
 module.exports = pinyin.convert.bind(pinyin);
@@ -10575,7 +9107,7 @@ module.exports.STYLE_FIRST_LETTER = Pinyin.STYLE_FIRST_LETTER;
 
 
 /***/ }),
-/* 101 */
+/* 48 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -12125,13 +10657,13 @@ module.exports = {
 
 
 /***/ }),
-/* 102 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const assign = __webpack_require__(103);
+const assign = __webpack_require__(50);
 // XXX: Symbol when web support.
 const PINYIN_STYLE = {
   NORMAL: 0,       // 普通风格，不带音标。
@@ -12152,7 +10684,7 @@ const INITIALS = "b,p,m,f,d,t,n,l,g,k,h,j,q,x,r,zh,ch,sh,z,c,s".split(",");
 // 韵母表。
 //const FINALS = "ang,eng,ing,ong,an,en,in,un,er,ai,ei,ui,ao,ou,iu,ie,ve,a,o,e,i,u,v".split(",");
 // 带音标字符。
-const PHONETIC_SYMBOL = __webpack_require__(104);
+const PHONETIC_SYMBOL = __webpack_require__(51);
 const RE_PHONETIC_SYMBOL = new RegExp("([" + Object.keys(PHONETIC_SYMBOL).join("") + "])", "g");
 const RE_TONE2 = /([aeoiuvnm])([0-4])$/;
 
@@ -12342,7 +10874,7 @@ module.exports = Pinyin;
 
 
 /***/ }),
-/* 103 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12439,7 +10971,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 
 /***/ }),
-/* 104 */
+/* 51 */
 /***/ (function(module, exports) {
 
 // 带音标字符。
@@ -12474,5 +11006,1476 @@ module.exports = {
 };
 
 
+/***/ }),
+/* 52 */,
+/* 53 */,
+/* 54 */,
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */,
+/* 61 */,
+/* 62 */,
+/* 63 */,
+/* 64 */,
+/* 65 */,
+/* 66 */,
+/* 67 */,
+/* 68 */,
+/* 69 */,
+/* 70 */,
+/* 71 */,
+/* 72 */,
+/* 73 */,
+/* 74 */,
+/* 75 */,
+/* 76 */,
+/* 77 */,
+/* 78 */,
+/* 79 */,
+/* 80 */,
+/* 81 */,
+/* 82 */,
+/* 83 */,
+/* 84 */,
+/* 85 */,
+/* 86 */,
+/* 87 */,
+/* 88 */,
+/* 89 */,
+/* 90 */,
+/* 91 */,
+/* 92 */,
+/* 93 */,
+/* 94 */,
+/* 95 */,
+/* 96 */,
+/* 97 */,
+/* 98 */,
+/* 99 */,
+/* 100 */,
+/* 101 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+var _i18next = __webpack_require__(4);
+
+var _i18next2 = _interopRequireDefault(_i18next);
+
+var _i18nextXhrBackend = __webpack_require__(5);
+
+var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
+
+var _functions = __webpack_require__(6);
+
+var _setting = __webpack_require__(7);
+
+var _pagination = __webpack_require__(23);
+
+var _authmyid = __webpack_require__(31);
+
+var _marker_drag = __webpack_require__(30);
+
+var _company_station_pagination = __webpack_require__(102);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//加载样式文件
+__webpack_require__(27);
+__webpack_require__(25);
+__webpack_require__(103);
+
+__webpack_require__(26);
+window.map;
+window.markers = []; //该条路线所有的标记集合
+window.company_markers = []; //添加的公司所有站点
+window.markerClusterer;
+window.infoWindow;
+
+//url解析
+var operate_map = __webpack_require__(104); //cloud登录地址
+//输入框名字
+//验证登录的功能
+
+(0, _authmyid.login_check)();
+(0, _authmyid.login_out)(); //登出按钮操作
+
+var url = window.location.href;
+var route_name = decodeURI((0, _functions.parseQueryString)(url).route_name); //路线名
+$('.box1 .home span.route_name').text(route_name);
+//返回主页的连接地址
+var home_addr = url.replace('/html/routeMaker.html', '/index.html').split('&xml_id=')[0];
+//返回公司站点管理页地址
+var company_station_addr = url.replace('/routeMaker.html', '/companyStation.html').split('&xml_id=')[0];
+$('.box1 .home').find('button.go_back,button.go_company_station_manage').click(function (e) {
+    //返回主页
+    e.stopPropagation();
+    if ($('.box1 .home span.save_tip').hasClass('saved')) {
+        //保存过了，即未做修改
+        if ($(this).hasClass('go_back')) {
+            window.location = home_addr;
+        } else {
+            window.location = company_station_addr;
+        }
+    } else {
+        var save_tip = _i18next2.default.t('Not_save_tip');
+        $('#myModal_gohome').modal('show'); //模态框显示
+        $('#myModal_gohome .modal-body p.err_tip').text(save_tip);
+        //点击确定
+        $('#myModal_gohome .modal-footer button.confirm').unbind('click');
+        $('#myModal_gohome .modal-footer button.confirm').bind('click', function (e) {
+            e.stopPropagation();
+            if ($(this).hasClass('go_back')) {
+                window.location = home_addr;
+            } else {
+                window.location = company_station_addr;
+            }
+        });
+    }
+});
+
+url = (0, _functions.parseQueryString)(url);
+var company_id = Number(url.uid); //公司id
+var xml_id = url.xml_id; //xml+id值
+//模态框，是否添加标记,初始化模态框
+$('#myModal,#edit_company_stations,#myModal_gohome').modal({
+    show: false
+});
+//模态框标记名输入框检测
+$('#myModal .modal-body input.mark_name').get(0).oninput = function (e) {
+    e.stopPropagation();
+    (0, _pagination.input_check_fun)($(this), 1000);
+};
+
+//使标记命名框可以拖动
+$('#marker_name').draggable();
+$('#marker_name p.myBg i').click(function (e) {
+    e.stopPropagation();
+    $('#marker_name').fadeOut(); //隐藏
+});
+$('#marker_name .my_inp input.mark_name').get(0).oninput = function (e) {
+    e.stopPropagation();
+    (0, _pagination.input_check_fun)($(this), 1000);
+};
+
+//使站点列表可以排序
+$('#chosen_stations ul.stations_lists').sortable({
+    stop: function stop(ui) {
+        //排序完释放鼠标后执行的函数
+        (0, _marker_drag.draw_line)(); //画线
+        var save_val = _i18next2.default.t('UnSaved');
+        $('.home span.save_tip').removeClass('saved').attr('data-i18n', 'UnSaved').text(save_val);
+    }
+});
+
+function map_reset() {
+    //地图重新画
+    var place = map.getCenter(); //获取位置
+    var zoom = map.getZoom(); //获取位置
+    window.map = new google.maps.Map(document.getElementById('google_map'), {
+        zoom: zoom,
+        center: place,
+        streetViewControl: true,
+        rotateControl: true,
+        scaleControl: true
+    });
+    window.clearMarkers_clusterer(window.markers);
+    (0, _marker_drag.draw_line)(); //重新画线
+}
+
+window.my_company_stations = new _company_station_pagination.Company_station();
+window.my_company_stations.get_route_stations();
+window.my_company_stations.get_company_station().then(function (getData) {
+    //添加公司下所有站点数据
+    my_company_stations.add_all_stations(getData);
+}, function (msg) {
+    $('#zhezhao').fadeOut(1);
+});
+
+//点击搜索按钮
+$('#jingweidu_search i.sosuo').click(function (e) {
+    $('#place_search_form').submit(); //表单提交
+});
+
+//经纬度搜索表单提交
+$('#place_search_form').submit(function (e) {
+    e.preventDefault(); //阻止对表单的提交
+    var input_val = $('#jingweidu_search input.search_place').val().trim();
+    if (!input_val) {
+        //非空，为空即返回
+        return;
+    }
+
+    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
+    var $err_tip = $('#jingweidu_search p.err_tip');
+    input_val = input_val.split(','); //分成数组
+    if (input_val.length != 2) {
+        $err_tip.html(err_tip).stop(true).fadeIn(100);
+        setTimeout(function () {
+            $err_tip.stop(true).fadeOut();
+        }, 5000);
+        return;
+    } else {
+        var latitude = input_val[0].trim(); //纬度
+        var longitude = input_val[1].trim(); //经度
+        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
+            //只要其中有一个不是数值
+            $err_tip.html(err_tip).stop(true).fadeIn(100);
+            setTimeout(function () {
+                $err_tip.stop(true).fadeOut();
+            }, 5000);
+            return;
+        } else {
+            //都是数值类型
+            latitude = Number(latitude);
+            longitude = Number(longitude);
+            //判断值的范围
+            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
+                $err_tip.html(err_tip).stop(true).fadeIn(100);
+                setTimeout(function () {
+                    $err_tip.stop(true).fadeOut();
+                }, 5000);
+                return;
+            }
+
+            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
+            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
+        }
+    }
+    //输入符合要求才能执行下面代码
+    var latLng = {
+        lat: function lat() {
+            return latitude;
+        },
+        lng: function lng() {
+            return longitude;
+        }
+    };
+    operate_map.add_company_mark_repeat(company_id, latLng, window.company_markers);
+});
+
+//点击地名搜索
+$('#latlng_search .latlng_search i.sosuo').click(function (e) {
+    e.stopPropagation();
+    $('#latlng_search').submit(); //表单提交
+});
+
+var Is_auto_save = false; //是否是自动保存
+//点击保存按钮
+$('.box1 .home button.confirm').click(function (e) {
+    e.stopPropagation();
+    var send_data = []; //发送的数据
+    var $choose_station = $('#chosen_stations ul.stations_lists li.stations_list');
+    if ($choose_station.length == 0) {
+        return;
+    }
+    for (var i = 0; i < $choose_station.length; i++) {
+        var station_id = Number($choose_station.eq(i).attr('station_id'));
+        var station_ctime = Number($choose_station.eq(i).attr('ctime'));
+        for (var j = 0; j < window.markers.length; j++) {
+            var origin_station_id = window.markers[j].origin_station_id;
+            var _station_id = window.markers[j].station_id;
+            var latLng = window.markers[j].position;
+            if (station_id == _station_id) {
+                var data_tmp = {
+                    origin_station_id: origin_station_id,
+                    station_id: station_id,
+                    ctime: station_ctime,
+                    latLng: {
+                        lat: latLng.lat().toFixed(6),
+                        lng: latLng.lng().toFixed(6)
+                    }
+                };
+                send_data.push(data_tmp);
+                break;
+            }
+        }
+    };
+    //更新数据，保存
+    $('#zhezhao').fadeIn(1);
+    $.ajax({
+        url: '/myroute/save_update_data',
+        type: 'post',
+        data: {
+            xml_id: xml_id,
+            send_data: send_data
+        },
+        success: function success(res) {
+            $('#zhezhao').fadeOut(1);
+            if (res.msg == 'err' || res.msg == 'no') {
+                window.location = _setting.login_url;
+            } else if (res.msg == 'ok') {
+                var save_val = _i18next2.default.t('Saved');
+                $('.home span.save_tip').addClass('saved').attr('data-i18n', 'Saved').text(save_val);
+                //保存后，使源station_id与origin_station_id一致
+                var $table_tr = $('#company_stations tbody tr');
+                for (var i = 0; i < window.markers.length; i++) {
+                    window.markers[i].origin_station_id = window.markers[i].station_id;
+                }
+                for (var i = 0; i < window.company_markers.length; i++) {
+                    var _origin_station_id = window.company_markers[i].origin_station_id;
+                    var _station_id2 = window.company_markers[i].station_id;
+                    var _latLng = window.company_markers[i].getPosition();
+                    var myLatLng = {
+                        lat: parseInt(_latLng.lat() * 1000000) / 1000000,
+                        lng: parseInt(_latLng.lng() * 1000000) / 1000000
+                        //console.log(latLng,myLatLng)
+                    };for (var j = 0; j < $table_tr.length; j++) {
+                        var _station_id3 = $table_tr.eq(j).attr('station_id');
+                        if (_origin_station_id == _station_id3) {
+                            $table_tr.eq(j).attr('station_id', _station_id2);
+                            $table_tr.eq(j).find('td.station_addr').attr('title', myLatLng.lat + ',' + myLatLng.lng).text(myLatLng.lat + '\/' + myLatLng.lng);
+                            break;
+                        }
+                    }
+                    window.company_markers[i].origin_station_id = _station_id2;
+                };
+                //保存成功提示信息
+                var tip;
+                if (Is_auto_save) {
+                    //自动保存
+                    tip = _i18next2.default.t('Auto_save_success'); //提示信息
+                } else {
+                    tip = _i18next2.default.t('Save_success'); //提示信息
+                }
+                $('#save_success p.save_tip').text(tip);
+                $('#save_success').stop(true).fadeIn(1);
+                setTimeout(function () {
+                    $('#save_success').stop(true).fadeOut(1);
+                }, 2500);
+                Is_auto_save = false;
+            }
+        },
+        error: function error(err) {
+            if (err.status == 500) {
+                alert('server error,please operation later.');
+                window.location.reload();
+            }
+        }
+    });
+});
+//设置每10分钟自动保存
+setInterval(function () {
+    Is_auto_save = true;
+    $('#container .contain_left_top .confirm_box button.confirm').trigger('click');
+}, 600 * 1000);
+
+//点击展开方式
+$('.box1 .home .expand_style ul li').click(function (e) {
+    $(this).addClass('active').siblings().removeClass('active');
+    var li_index = $(this).index();
+    //展开方式默认为序号1
+    var expand_style_index = Number($(this).parent().attr('index'));
+    $(this).parent().attr('index', li_index);
+    if (li_index == 0) {
+        //展开所有栏位
+        $('#container .contain_left').css('opacity', '1');
+        $('#company_stations tfoot tr th').attr('colspan', '5');
+        if (expand_style_index == 1) {
+            //之前是隐藏了position
+            $('#company_stations thead tr th.postion').fadeIn(1);
+            $('#company_stations tbody tr td.station_addr').fadeIn(1);
+        } else if (expand_style_index == 2) {
+            //之前是全部收缩
+            $('#google_map_box').stop(true).animate({ width: '70%' }, 1500).siblings('.contain_left').stop(true).animate({ width: '30%' }, 1500, function () {
+                map_reset();
+            });
+        }
+    } else if (li_index == 1) {
+        //展开部分，但是position隐藏
+        $('#container .contain_left').css('opacity', '1');
+        $('#company_stations tfoot tr th').attr('colspan', '4');
+        $('#company_stations thead tr th.postion').fadeOut(1);
+        $('#company_stations tbody tr td.station_addr').fadeOut(1);
+        if (expand_style_index == 2) {
+            //之前是全部收缩
+            $('#google_map_box').stop(true).animate({ width: '70%' }, 1500).siblings('.contain_left').stop(true).animate({ width: '30%' }, 1500, function () {
+                map_reset();
+            });
+        }
+    } else if (li_index == 2) {
+        //全部收缩
+        $('#company_stations tfoot tr th').attr('colspan', '5');
+        $('#container .contain_left').stop(true).animate({ width: '0%' }, 1500).siblings('#google_map_box').stop(true).animate({ width: '100%' }, 1500, function () {
+            $('#container .contain_left').css('opacity', '0');
+            map_reset();
+        });
+        if (expand_style_index == 1) {
+            //展开部分，但是position隐藏
+            $('#company_stations thead tr th.postion').fadeIn(1);
+            $('#company_stations tbody tr td.station_addr').fadeIn(1);
+        }
+    }
+});
+
+//点击Reserve反向按钮
+$('#container .contain_left_top button.reverse').click(function (e) {
+    e.stopPropagation();
+    var $choose_station = $("#chosen_stations ul");
+    var stationsArray = $("#chosen_stations ul li.stations_list");
+    $choose_station.empty(); //清空
+    stationsArray.sort(function (a, b) {
+        //反向排序
+        return 1;
+    }).appendTo($choose_station);
+    //将里面的数字序号修改正确
+    for (var i = 0; i < $choose_station.find('li').length; i++) {
+        var $li = $choose_station.find('li').eq(i);
+        var station_index = i + 1;
+        if (station_index > 999) {
+            station_index = 999 + '+';
+        }
+        $li.find('span.station_num').text(station_index);
+    }
+    (0, _marker_drag.draw_line)(); //重新画线
+    (0, _company_station_pagination.click_station_delete)(); //使之能重新点击事件恢复
+    //通知为未保存状态
+    var save_val = _i18next2.default.t('UnSaved');
+    $('.home span.save_tip').removeClass('saved').attr('data-i18n', 'UnSaved').text(save_val);
+});
+
+//点击All stations show按钮，使所有站点都显示在地图上
+var bounds = new google.maps.LatLngBounds(); //缩放对象
+$('#container .contain_left_top button.all_stations_show').click(function (e) {
+    e.stopPropagation();
+    //设置最佳缩放级别
+    for (var i = 0; i < window.markers.length; i++) {
+        bounds.extend(window.markers[i].getPosition());
+    }
+    window.map.fitBounds(bounds);
+});
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+/* 102 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+var _setting = __webpack_require__(7);
+
+var _functions = __webpack_require__(6);
+
+var _i18next = __webpack_require__(4);
+
+var _i18next2 = _interopRequireDefault(_i18next);
+
+var _i18nextXhrBackend = __webpack_require__(5);
+
+var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
+
+var _search_place_name = __webpack_require__(32);
+
+var _marker_drag = __webpack_require__(30);
+
+var _table_filter = __webpack_require__(46);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//对表格进行过滤
+
+//搜索城市名
+var url = (0, _functions.parseQueryString)(window.location.href); //routeMaker页面的脚本
+//公司站点分页脚本
+
+var route_id = url.xml_id;
+var company_id = Number(url.uid); //公司id
+
+/**构造函数
+ * 
+ * **/
+function Company_station() {
+    this.new_marker_stationID; //新增公司站点所在的站点id
+
+    /**获取数据库Company Station数据
+     * 
+     * city_name 城市名称，主要是用作设置滚动条位置
+     * **/
+    this.get_company_station = function (city_name) {
+        var that = this;
+        if (!route_id) {
+            return;
+        }
+        $('#zhezhao').fadeIn(1);
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                url: '/myroute/get_company_stations',
+                type: 'post',
+                data: {
+                    route_id: route_id
+                },
+                success: function (res, status) {
+                    if (res.msg == 'ok') {
+                        $('#company_stations tbody').html(''); //清空表格
+                        var getData = res.data;
+                        var stations_num = res.dataLen; //公司站点的总数目
+                        if (getData.length === 0) {
+                            $('#company_stations tfoot').fadeIn(1);
+                            reject('error');
+                            return;
+                        } else {
+                            $('#company_stations tfoot').fadeOut(1);
+                        }
+                        $('#search_station_numbers').text(stations_num);
+                        that.createTable(getData, city_name); //创建表格
+                        if (that.new_marker_stationID) {
+                            //如果是新增站点
+                            //排序
+                            that.sort_company_markers(getData);
+                        }
+                        resolve(getData);
+                        $('#zhezhao').fadeOut(1);
+                    } else if (res.msg == 'err' || res.msg == 'no') {
+                        window.location = _setting.login_url; //跳转
+                    }
+                }.bind(this),
+                error: function error(err) {
+                    if (err.status == 500) {
+                        alert('server error,please try again later.');
+                    }
+                }
+            });
+        });
+    };
+
+    //添加公司下所有站点数据,push(window.company_markers)
+    this.add_all_stations = function (company_stationsData) {
+        for (var i = 0; i < company_stationsData.length; i++) {
+            var addr_content = company_stationsData[i].addr_content;
+            var latLng = {
+                lat: Number(company_stationsData[i].lat),
+                lng: Number(company_stationsData[i].lng)
+            };
+            var marker = new google.maps.Marker({
+                //map:map,
+                position: latLng,
+                addr_content: (0, _functions.htmlspecialchars_decode)(addr_content),
+                station_id: company_stationsData[i].station_id,
+                origin_station_id: company_stationsData[i].station_id, //初始的station_id
+                station_name: company_stationsData[i].stations_name
+            });
+            window.company_markers.push(marker);
+        }
+    };
+
+    /**分页码
+     * totalPage 表示总页码数
+     * currenPage 表示当前页码
+     * count  表示显示的个数
+     * **/
+    /* this.split_page = function(totalPage,currentPage=1,count=5){
+        var that = this;
+        $('#pageShow .Page').pagination({
+            totalPage: totalPage,   // 总页数
+            currentPage: currentPage,  // 当前页数
+            isShow: true,    // 是否显示首尾页
+            count: count,        // 显示个数
+            homePageText: 'Start',  // 首页文本
+            endPageText: 'End',   // 尾页文本
+            prevPageText: "<<",// 上一页文本
+            nextPageText: ">>",// 下一页文本
+            callback: function(current) {  // 回调,current(当前页数)
+                //1. 获取当前页数和总页数
+                //var info=$("#pageShow .Page").pagination("getPage");// 获取当前页数和总页数
+                //$('#currentPage').text(info.current);
+                //$('#totalPage').text(info.total); 
+                //重新生成表格
+                that.get_company_station(that.nums_limit,current);
+            }
+        });
+        var $page=$('#pageShow .Page .ui-pagination-container a');
+        //为每个页码添加data-i18n属性
+        for(let i=0; i<$page.length; i++){
+            var text=$page.eq(i).text();
+            $page.eq(i).attr('data-i18n',text);
+            var i18n_text=i18next.t(text);
+            $page.eq(i).text(i18n_text);
+        }
+    }; */
+
+    //生成表格数据
+    this.createTable = function (getData, init_city_name) {
+        $('#marked_stations').scrollTop(0); //置顶
+        $('#company_stations tbody').html(''); //清空
+        var scroll_index;
+        for (var i = 0; i < getData.length; i++) {
+            var latLng = {
+                lat: Number(getData[i].lat),
+                lng: Number(getData[i].lng)
+            };
+            var station_id = getData[i].station_id;
+            var station_name = getData[i].stations_name;
+            var city_name = getData[i].city_name;
+            var tr = '<tr class=\'company_station\' station_id=\'' + station_id + '\'>\n                        <td class=\'index\' title="' + (i + 1 > 99 ? i + 1 : '') + '">' + (i + 1 > 99 ? '99+' : i + 1) + '</td>\n                        <td class="station_city" title="' + city_name + '">' + city_name + '</td>\n                        <td class="station_name" title="' + station_name + '">' + station_name + '</td>\n                        <td class="station_addr" title="' + latLng.lat + ',' + latLng.lng + '">' + latLng.lat + '/' + latLng.lng + '</td>\n                        <td class="action">\n                            <i class="icon route_iconfont route_icon-iconfontadd add"></i>\n                            <!--<i class="icon route_iconfont route_icon-shanchu delete"></i>\n                            <i class="icon route_iconfont route_icon-bianji1 edit"></i>-->\n                        </td>\n                    </tr>';
+            $('#company_stations tbody').append($(tr));
+            if (init_city_name == city_name) {
+                scroll_index = i;
+            }
+            var tr_length = $('#company_stations tbody tr').length;
+            //为其添加已添加过的样式
+            for (var j = 0; j < window.markers.length; j++) {
+                var _station_id = window.markers[j].origin_station_id;
+                if (station_id == _station_id) {
+                    $('#company_stations tbody tr').eq(tr_length - 1).addClass('chosen').children('td.action').find('i.add,i.delete').fadeOut(1); //添加和删除操作隐藏
+                    break;
+                }
+            }
+        }
+        //展开方式
+        var expand_style = Number($('.box1 .home .expand_style ul').attr('index'));
+        if (expand_style == 1) {
+            //需要隐藏position
+            $('#company_stations thead tr th.postion').fadeOut(1);
+            $('#company_stations tbody tr td.station_addr').fadeOut(1);
+        } else {
+            $('#company_stations thead tr th.postion').fadeIn(1);
+            $('#company_stations tbody tr td.station_addr').fadeIn(1);
+        }
+
+        if (scroll_index) {
+            var td_height = $('#company_stations tbody tr').eq(0).height();
+            var scroll_h = td_height * scroll_index;
+            $('#marked_stations .data_box').scrollTop(scroll_h);
+        }
+        this.station_operation();
+        //表格搜索过滤
+        (0, _table_filter.filterTable)();
+    }.bind(this);
+
+    //当新增公司站点时，需要对compant_markers进行排序
+    this.sort_company_markers = function (getData) {
+        var marker_index;
+        var company_markers_len = getData.length; //公司站点个数
+        for (var i = 0; i < getData.length; i++) {
+            var station_id = getData[i].station_id;
+            if (station_id == this.new_marker_stationID) {
+                marker_index = i;
+                break;
+            }
+        };
+        var marker = window.company_markers.splice(company_markers_len - 1, 1)[0];
+        window.company_markers.splice(marker_index, 0, marker);
+        //触发点击该增加按钮,使之新增加的站点直接加到该路线中
+        var $table_tr = $('#company_stations tbody tr');
+        for (var i = 0; i < $table_tr.length; i++) {
+            var _station_id2 = $table_tr.eq(i).attr('station_id');
+            if (this.new_marker_stationID == _station_id2) {
+                $table_tr.eq(i).find('td.action i.add').trigger('click');
+                break;
+            }
+        }
+    };
+
+    //表格里的操作按钮
+    this.station_operation = function () {
+        var that = this;
+
+        //点击Operation的+号按钮
+        $('#company_stations tbody tr.company_station td.action i.add').unbind('click');
+        $('#company_stations tbody tr.company_station td.action i.add').bind('click', function (e) {
+            e.stopPropagation();
+            var $that = $(this);
+            var origin_station_id = Number($(this).parent().parent().attr('station_id')); //原始的station_id
+            var city_name = $(this).parent().siblings('td.station_city').text(); //城市名
+            city_name = city_name.split(',').length > 1 ? city_name.split(',')[1] : city_name;
+            var station_id;
+            for (var i = 0; i < window.company_markers.length; i++) {
+                var li_station_id = company_markers[i].origin_station_id;
+                if (origin_station_id == li_station_id) {
+                    station_id = company_markers[i].station_id;
+                    break;
+                }
+            }
+            var isAdded = $(this).parent().parent().hasClass('chosen'); //是否已添加过了
+            if (isAdded) {
+                //查找是否已经添加该站点
+                var $choose_stations = $('#chosen_stations ul li.stations_list');
+                for (var i = 0; i < $choose_stations.length; i++) {
+                    var li_station_id = Number($choose_stations.eq(i).attr('station_id'));
+                    if (li_station_id == station_id) {
+                        $('#marked_stations p.err_tip').stop(true).fadeIn(1);
+                        setTimeout(function () {
+                            $('#marked_stations p.err_tip').stop(true).fadeOut(1);
+                        }, 1500);
+                        return;
+                    }
+                }
+            } else {
+                if (!($('#zhezhao').css('display') == 'block')) {
+                    //如果是隐藏的
+                    $('#zhezhao').fadeIn(1);
+                }
+                var station_ctime = new Date().getTime().toString(); //路线新增站点时间
+                var station_name = $(this).parent().siblings('td.station_name').text();
+                $.ajax({
+                    url: '/myroute/route_add_station',
+                    type: 'post',
+                    data: {
+                        route_id: route_id,
+                        station_id: origin_station_id,
+                        station_ctime: station_ctime
+                    },
+                    success: function success(res) {
+                        $('#zhezhao').fadeOut(1);
+                        if (res.msg == 'err' || res.msg == 'no') {
+                            window.location = _setting.login_url;
+                        } else if (res.msg == 'ok') {
+                            //没有这个xml_id
+                            $that.parent().parent().addClass('chosen'); //添加背景选中颜色
+                            $that.parent().find('i.add').fadeOut(1); //添加和删除操作隐藏
+                            var station_index = $('#chosen_stations ul li.stations_list').length + 1; //站点序号
+                            if (station_index > 999) {
+                                station_index = 999 + '+';
+                            }
+                            var chosen_station = '<li class="stations_list" station_id=\'' + origin_station_id + '\' ctime=\'' + station_ctime + '\'>\n                                                    <i class="icon route_iconfont route_icon-paixu"></i>\n                                                    <span class="station_num">' + station_index + '&middot;</span>\n                                                    <span class="station_name">' + station_name + '</span>\n                                                    <span class="station_city">' + city_name + '</span>\n                                                    <i class="icon route_iconfont route_icon-shanchu delete"></i>\n                                                </li>';
+                            $('#chosen_stations ul').append(chosen_station);
+                            for (var i = 0; i < window.company_markers.length; i++) {
+                                var li_station_id = Number(company_markers[i].station_id);
+                                if (station_id == li_station_id) {
+                                    var latLng = company_markers[i].position;
+                                    var addr_content = company_markers[i].addr_content;
+                                    var _station_name = company_markers[i].station_name;
+                                    company_markers[i].setMap(null);
+                                    var marker = new google.maps.Marker({
+                                        map: map,
+                                        position: latLng,
+                                        addr_content: addr_content,
+                                        station_id: origin_station_id,
+                                        origin_station_id: origin_station_id,
+                                        station_name: _station_name,
+                                        draggable: true
+                                    });
+                                    map.setCenter(latLng); //设置中心点
+                                    (0, _marker_drag.marker_drag_ev)(marker); //使标记可拖拽
+                                    window.markers.push(marker);
+                                    window.marker_click(marker);
+                                    break;
+                                }
+                            }
+
+                            (0, _marker_drag.draw_line)(); //画折线
+                            click_station_delete(); //点击选中的删除小图标
+                            sortable_chosen_station(route_id);
+                        }
+                    },
+                    error: function error(err) {
+                        if (err.status == 500) {
+                            alert('server error,please operation later.');
+                            window.location.reload();
+                        }
+                    }
+                });
+            }
+        });
+    };
+
+    //获取该路线下已添加过的站点
+    this.get_route_stations = function (callback) {
+        $('#zhezhao').fadeIn(1);
+        $.ajax({
+            url: '/myroute/get_route_stations', //获取该路线下添加的站点
+            type: 'post',
+            async: false,
+            data: {
+                xml_id: route_id
+            },
+            success: function success(res) {
+                $('#zhezhao').fadeOut(1);
+                if (res.msg == 'err') {
+                    window.location = _setting.login_url;
+                } else if (res.msg == 'ok') {
+                    var stations_data = res.data; //已添加站点数据
+                    for (var i = 0; i < stations_data.length; i++) {
+                        var ctime = stations_data[i].ctime; //已选站点的添加时间
+                        var station_id = stations_data[i].station_id;
+                        var lat = Number(stations_data[i].lat);
+                        var lng = Number(stations_data[i].lng);
+                        var latLng = {
+                            lat: lat,
+                            lng: lng
+                        };
+                        var station_name = (0, _functions.htmlspecialchars_decode)(stations_data[i].stations_name);
+                        var addr_content = (0, _functions.htmlspecialchars_decode)(stations_data[i].addr_content);
+                        var city_name = (0, _functions.htmlspecialchars_decode)(stations_data[i].city_name);
+                        city_name = city_name.split(',').length > 1 ? city_name.split(',')[1] : city_name;
+
+                        var marker = new google.maps.Marker({
+                            //map : map,
+                            position: latLng,
+                            addr_content: addr_content,
+                            station_id: station_id,
+                            origin_station_id: station_id, //初始的station_id
+                            station_name: station_name,
+                            draggable: true
+                        });
+                        marker.setMap(map);
+                        (0, _marker_drag.marker_drag_ev)(marker); //使标记可拖拽
+                        window.markers.push(marker); //添加marker
+                        //console.log(markers);
+                        window.marker_click(marker); //标记点点击事件
+
+                        var station_index = i + 1; //站点序号
+                        if (station_index > 999) {
+                            station_index = 999 + '+';
+                        }
+                        var chosen_station = '<li class="stations_list" station_id=\'' + station_id + '\' ctime=\'' + ctime + '\'>\n                                                <i class="icon route_iconfont route_icon-paixu"></i>\n                                                <span class="station_num">' + station_index + '.</span>\n                                                <span class="station_name" title=\'' + station_name + '\'>' + station_name + '</span>\n                                                <span class="station_city" title=\'' + city_name + '\'>' + city_name + '</span>\n                                                <i class="icon route_iconfont route_icon-shanchu delete"></i>\n                                            </li>';
+                        $('#chosen_stations ul').append(chosen_station);
+                        var $table_body = $('#company_stations tbody tr.company_station');
+                        for (var j = 0; j < $table_body.length; j++) {
+                            var li_station_id = Number($table_body.eq(j).attr('station_id'));
+                            if (station_id == li_station_id) {
+                                $table_body.eq(j).addClass('chosen'); //增加添加过的样式
+                                break;
+                            }
+                        }
+                    }
+                    (0, _marker_drag.draw_line)();
+                    click_station_delete();
+                }
+            },
+            error: function error(err) {
+                if (err.status == 500) {
+                    alert('server error,please try later.');
+                }
+            }
+        });
+    };
+
+    //向后台请求新增公司站点
+    this.add_station_req = function (marker, station_name, addr_content, ret_data, city_name) {
+        $('#zhezhao').fadeIn(1);
+        var that = this;
+        $.ajax({
+            url: '/myroute/add_station',
+            type: 'post',
+            data: {
+                xml_id: route_id,
+                ctime: new Date().getTime(),
+                station_id: ret_data.station_id,
+                stations_name: (0, _functions.htmlspecialchars)(station_name),
+                addr_content: (0, _functions.htmlspecialchars)(addr_content),
+                latLng: ret_data.latLng,
+                city_name: (0, _functions.htmlspecialchars)(city_name)
+            },
+            success: function success(res) {
+                //$('#zhezhao').fadeOut(1);
+                if (res.msg == 'err') {
+                    window.location.reload();
+                } else if (res.msg == 'has') {
+                    //站点名存在提示信息
+                    $('#zhezhao').fadeOut(1);
+                    var modify_tip = _i18next2.default.t('Station_name_exists');
+                    var $err_tip = $('#marker_name .my_inp p.err_tip,#myModal .modal-body p.err_tip');
+                    $err_tip.text(modify_tip).stop(true).fadeIn(100);
+                    setTimeout(function () {
+                        $err_tip.stop(true).slideUp();
+                    }, 2000);
+                } else if (res.msg == 'ok') {
+                    $('#place_input').val(''); //清空地名输入框
+                    $('#jingweidu_search input.search_place').val(''); //清空经纬度输入框
+                    $('#myModal').fadeOut(1).modal('hide');
+                    $('#marker_name').fadeOut(1).find('input.mark_name').val(''); //标记命名隐藏
+                    company_markers.push(marker);
+                    marker.setMap(map);
+                    (0, _marker_drag.marker_drag_ev)(marker, true); //使标记可拖拽
+                    //重新生成表格
+                    that.get_company_station(city_name); //重新生成表格
+                    that.new_marker_stationID = ret_data.station_id;
+                }
+            },
+            error: function error(err) {
+                if (err.status == 500) {
+                    alert('server error,please operation later.');
+                }
+            }
+        });
+    };
+}
+
+//点击Chosen Station 每个站点的删除图标、查看城市名按钮
+function click_station_delete() {
+    //点击被选中的站点的删除按钮
+    $('#chosen_stations ul li.stations_list i.delete').unbind('click');
+    $('#chosen_stations ul li.stations_list i.delete').bind('click', function (e) {
+        e.stopPropagation();
+        var station_id = Number($(this).parent().attr('station_id'));
+        var origin_station_id;
+        for (var i = 0; i < window.markers.length; i++) {
+            var _origin_station_id = markers[i].origin_station_id;
+            var _station_id = markers[i].station_id;
+            if (station_id == _station_id) {
+                origin_station_id = _origin_station_id;
+                break;
+            }
+        }
+        var _this = $(this);
+        $('#myModal_delete').modal('show'); //删除模态框出现
+        //点击模态框的确定按钮
+        $('#myModal_delete .modal-footer button.confirm').unbind('click');
+        $('#myModal_delete .modal-footer button.confirm').bind('click', function (e) {
+            e.stopPropagation();
+            $('#zhezhao').fadeIn(1);
+            $('#myModal_delete').modal('hide'); //删除模态框隐藏
+            var route_id = (0, _functions.parseQueryString)(window.location.href).xml_id;
+            $.ajax({
+                url: '/myroute/route_delete_station',
+                type: 'post',
+                data: {
+                    route_id: route_id, station_id: origin_station_id
+                },
+                success: function success(res) {
+                    $('#zhezhao').fadeOut(1);
+                    if (res.msg == 'err' || res.msg == 'no') {
+                        //没有这个xml_id或者无session
+                        window.location = _setting.login_url;
+                    } else if (res.msg == 'ok') {
+                        //从markers中删除
+                        for (var i = 0; i < window.markers.length; i++) {
+                            var li_station_id = Number(window.markers[i].station_id);
+                            if (station_id == li_station_id) {
+                                google.maps.event.clearInstanceListeners(markers[i]); //清除该实例的所有监听事件
+                                window.markers.splice(i, 1);
+                                clearMarkers_clusterer(window.markers);
+                                break;
+                            }
+                        }
+                        //删除公司选中站点的样式
+                        var $table_body = $('#company_stations tbody tr.company_station');
+                        for (var j = 0; j < $table_body.length; j++) {
+                            var li_station_id = Number($table_body.eq(j).attr('station_id'));
+                            if (origin_station_id == li_station_id) {
+                                $table_body.eq(j).removeClass('chosen'); //增加添加过的样式
+                                $table_body.eq(j).find('td.action i').fadeIn(1); //增加添加过的样式
+                                break;
+                            }
+                        }
+                        _this.parent().remove();
+                        (0, _marker_drag.draw_line)(); //画折线
+                    }
+                },
+                error: function error(err) {
+                    if (err.status == 500) {
+                        alert('server error,please operation later.');
+                        window.location.reload();
+                    }
+                }
+            });
+        });
+    });
+
+    //点击该站点这一列,使之位于地图中心点
+    $('#chosen_stations ul li.stations_list').unbind('click');
+    $('#chosen_stations ul li.stations_list').bind('click', function (e) {
+        e.stopPropagation();
+        window.map.setZoom(17);
+        var station_id = $(this).attr('station_id');
+        for (var i = 0; i < window.markers.length; i++) {
+            var _station_id = window.markers[i].station_id;
+            if (station_id == _station_id) {
+                var position = window.markers[i].getPosition();
+                window.map.setCenter(position);
+                break;
+            }
+        }
+    });
+}
+
+//对Chosen Stations数据库排序
+function sortable_chosen_station(xml_id) {
+    //按照Choosen Station顺序排列
+    var send_data = { //发送的数据
+        route_id: xml_id,
+        stations: []
+    };
+    var $choose_station = $('#chosen_stations ul.stations_lists li.stations_list');
+    /* for(var i=0; i<$choose_station.length; i++){
+        var station_id=Number($choose_station.eq(i).attr('station_id'));
+        var station_ctime=Number($choose_station.eq(i).attr('ctime'));
+        for(var j=0; j<window.markers.length; j++){
+            let origin_station_id=window.markers[j].origin_station_id;
+            let _station_id = window.markers[j].station_id;
+            if(station_id== _station_id){
+                station_id = origin_station_id;
+                break;
+            }
+        }
+        let temp_obj={
+            station_id,
+            ctime:station_ctime
+        }
+        send_data.stations.push(temp_obj);
+    }; */
+    for (var i = 0; i < window.markers.length; i++) {
+        var origin_station_id = window.markers[i].origin_station_id;
+        var station_ctime = Number($choose_station.eq(i).attr('ctime'));
+
+        var temp_obj = {
+            station_id: origin_station_id,
+            ctime: station_ctime
+        };
+        send_data.stations.push(temp_obj);
+    }
+
+    /* if(send_data.stations.length <2){  //一个以上才需要排序
+        return;
+    } */
+    $('#zhezhao').fadeIn(1);
+    //请求更新排序
+    $.ajax({
+        url: '/myroute/sortable_station',
+        type: 'post',
+        data: {
+            send_data: send_data
+        },
+        success: function success(res) {
+            $('#zhezhao').fadeOut(1);
+            if (res.msg == 'err' || res.msg == 'no') {
+                window.location = _setting.login_url;
+            } else if (res.msg == 'ok') {
+                (0, _marker_drag.draw_line)();
+            }
+        },
+        error: function error(err) {
+            if (err.status == 500) {
+                alert('server error,please try later.');
+                window.location.reload();
+            }
+        }
+    });
+}
+
+//对输入的经纬数据进行检测
+function cheek_input_latlng(element) {
+    var input_val = element.find('input.lat_lng').val().trim();
+    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
+    var $err_tip = element.find('p.err_tip');
+    input_val = input_val.split(','); //分成数组
+    if (input_val.length != 2) {
+        return false;
+    } else {
+        var latitude = input_val[0].trim(); //纬度
+        var longitude = input_val[1].trim(); //经度
+        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
+            //只要其中有一个不是数值
+            return false;
+        } else {
+            //都是数值类型
+            latitude = Number(latitude);
+            longitude = Number(longitude);
+            //判断值的范围
+            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
+                return false;
+            }
+
+            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
+            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
+        }
+    }
+    //输入符合要求才能执行下面代码
+    var latLng = {
+        lat: function lat() {
+            return latitude;
+        },
+        lng: function lng() {
+            return longitude;
+        }
+    };
+    return latLng;
+}
+
+module.exports = {
+    Company_station: Company_station,
+    click_station_delete: click_station_delete
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+/* 103 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 104 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+var _i18next = __webpack_require__(4);
+
+var _i18next2 = _interopRequireDefault(_i18next);
+
+var _i18nextXhrBackend = __webpack_require__(5);
+
+var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
+
+var _pagination = __webpack_require__(23);
+
+var _functions = __webpack_require__(6);
+
+var _ContextMenu = __webpack_require__(33);
+
+var _marker_drag = __webpack_require__(30);
+
+var _search_place_name = __webpack_require__(32);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var pinyin = __webpack_require__(47); //将汉字转为拼音
+//输入框名字
+//得到站点id和经纬度
+
+
+var company_id = Number((0, _functions.parseQueryString)(window.location.href).uid); //公司id
+
+var uluru = { lat: 30.936986, lng: 113.914559 }; //湖北工程学院地理位置
+
+window.map = new google.maps.Map(document.getElementById('google_map'), {
+    zoom: 6,
+    center: uluru,
+    streetViewControl: true,
+    rotateControl: true,
+    scaleControl: true
+});
+if (navigator.geolocation) {
+    var options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+    navigator.geolocation.getCurrentPosition(function (position) {
+        // var place =map.getCenter();  //获取位置  http协议下无效
+        var lat = parseInt(position.coords.latitude * 1000000) / 1000000;
+        var lng = parseInt(position.coords.longitude * 1000000) / 1000000;
+        // var lat =place.lat()+2;
+        // var lng =place.lng()+3;
+        uluru.lat = lat;
+        uluru.lng = lng;
+
+        window.map.setCenter(uluru);
+        new google.maps.Marker({
+            map: map,
+            position: uluru
+        });
+    }, function (err) {
+        console.log(err);
+    }, options);
+}
+
+//新的构造器对象
+//var map_context_menu=new ContextMenu(map);
+
+//标记聚类
+window.markerClusterer = new MarkerClusterer(map, markers, {
+    imagePath: '/myroute/libs/images/m'
+});
+
+window.infoWindow = new google.maps.InfoWindow(); //窗口提示
+window.search_tmp_marker; //搜索时的临时点，点击确定或者重新搜索会被替换掉
+//地址搜索控件
+window.map_input = /** @type {!HTMLInputElement} */document.getElementById('place_input');
+//map.controls[google.maps.ControlPosition.TOP_LEFT].push(map_input);
+//根据地名搜索经纬度
+$('#latlng_search').submit(function (e) {
+    e.preventDefault(); //阻止对表单的提交
+    var place_name = $('#latlng_search .latlng_search input.input_addr').val().trim();
+    (0, _search_place_name.search_latlng)(place_name).then(function (latLng) {
+        var lat_lng = {
+            lat: function lat() {
+                return latLng.lat.toFixed(6);
+            },
+            lng: function lng() {
+                return latLng.lng.toFixed(6);
+            }
+        };
+        map.setCenter(latLng);
+        map.setZoom(20); // Why 17? Because it looks good.当20时可以放大到10米的比例尺
+        $('#myModal').modal('show');
+        $('#myModal .modal-body input.mark_name').val(''); //清空名称
+        //点击模态框的No
+        $('#myModal button.cancel').unbind('click');
+        $('#myModal button.cancel').bind('click', function (e) {
+            e.stopPropagation();
+            $('#myModal').modal('hide');
+        });
+        //点击模态框的Yes
+        place_name = pinyin(place_name, {
+            style: pinyin.STYLE_NORMAL
+        }).join('');
+        $('#myModal .modal-body input.mark_name').val(place_name);
+        $('#myModal button.confirm').unbind('click');
+        $('#myModal button.confirm').bind('click', function (e) {
+            e.stopPropagation();
+            var check_input_filename = (0, _pagination.input_check_fun)($('#myModal .modal-body input.mark_name'), 1000);
+            if (!check_input_filename) {
+                //不满足输入条件
+                return;
+            }
+            var input_val = $('#myModal input.mark_name').val().trim();
+            $('#myModal').modal('hide');
+            var addr_content = '<div><strong>' + input_val + '</strong><br>' + input_val + '</div>';
+            //新标记
+            var ret_data = (0, _functions.cal_station_id)(company_id, lat_lng, company_markers);
+            //console.log(ret_data)
+            if (!ret_data) {
+                //如果返回false
+                var tip_err = _i18next2.default.t('Mark_near');
+                $('#myModal .modal-body p.err_tip').text(tip_err).fadeIn(1);
+                setTimeout(function () {
+                    $('#myModal .modal-body p.err_tip').text('').fadeOut(1);
+                }, 2000);
+                return;
+            }
+
+            //删除之前的临时标记
+            if (window.search_tmp_marker) {
+                search_tmp_marker.setMap(null);
+            }
+
+            //表示下面开始添加标记
+            var station_id = ret_data.station_id; //站点id
+            var marker = new google.maps.Marker({
+                //map: map,
+                addr_content: addr_content,
+                station_id: ret_data.station_id,
+                origin_station_id: ret_data.station_id, //初始的station_id
+                station_name: input_val,
+                draggable: true
+            });
+            marker.setPosition(ret_data.latLng);
+            (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
+                //公司新增站点请求
+                window.my_company_stations.add_station_req(marker, input_val, addr_content, ret_data, city_name);
+            });
+        });
+    }, function (msg) {
+        if (msg == 'err') {
+            alert("google api service error,plese try again,or this place can't be found.");
+        }
+    });
+});
+
+//刷新聚类标记
+window.clearMarkers_clusterer = function (this_markers) {
+    //清除所有的标记
+    if (markerClusterer) {
+        //相当于刷新了标记聚类
+        markerClusterer.clearMarkers();
+        markerClusterer = new MarkerClusterer(map, this_markers, {
+            imagePath: '/myroute/libs/images/m'
+            //maxZoom:20,  #最大放大
+            //gridSize: size, 
+        });
+    }
+};
+
+//在地图上鼠标右键菜单出现
+var marker_station_id; //标记序列号;  //删除标记的序列号
+map.addListener('click', function (e) {
+    $('#map_menu').fadeOut(1);
+});
+
+map.addListener('rightclick', function (e) {
+    marker_station_id = -1;
+    var latLng = e.latLng; //地理经纬度
+    $('#map_menu ul.menu_lists li.add').fadeIn(1);
+    $('#map_menu ul.menu_lists li.delete').fadeOut(1);
+    map_menu_position(e); //菜单显示
+    menu_click(latLng);
+});
+
+//添加标记复用代码
+function add_company_mark_repeat(company_id, latLng, company_markers) {
+    var ret_data = (0, _functions.cal_station_id)(company_id, latLng, company_markers);
+    if (!ret_data) {
+        //如果返回false
+        var p_tip = '<p class="add_mark_tip">There is a tag that is too small for this tag.</p>';
+        $('#place_input').after($(p_tip)).siblings('p.add_mark_tip').animate({ top: 15 }, 1000, function () {
+            setTimeout(function () {
+                $('#google_map_box p.add_mark_tip').remove();
+            }, 2000);
+        });
+        return;
+    };
+    //获取该经纬度所在地点名称
+    (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
+        $('#marker_name').fadeIn() //标记命名显示
+        .find('.my_inp input.mark_name').val(city_name);
+    });
+    //点击命名确定
+    $('#marker_name .my_btn button.confirm').unbind('click');
+    $('#marker_name .my_btn button.confirm').bind('click', function (e) {
+        e.stopPropagation();
+        var check_input_filename = (0, _pagination.input_check_fun)($('#marker_name .my_inp input.mark_name'), 1000);
+        if (!check_input_filename) {
+            //不满足输入条件
+            return;
+        }
+        //满足条件增加标记
+        var input_val = $('#marker_name .my_inp input.mark_name').val().trim();
+        var addr_content = '<div><strong>' + input_val + '</strong><br></div>';
+        var marker = new google.maps.Marker({
+            //map:map,
+            position: ret_data.latLng,
+            addr_content: addr_content,
+            station_id: ret_data.station_id,
+            origin_station_id: ret_data.station_id, //初始的station_id
+            station_name: input_val,
+            draggable: true
+        });
+        map.setCenter(ret_data.latLng);
+        (0, _search_place_name.search_place)(ret_data.latLng).then(function (city_name) {
+            //公司新增站点请求
+            window.my_company_stations.add_station_req(marker, input_val, addr_content, ret_data, city_name);
+        });
+    });
+}
+//地图菜单选项点击事件
+function menu_click(latLng) {
+    //点击菜单选项，添加标记
+    $('#map_menu ul li.add').unbind('click');
+    $('#map_menu ul li.add').bind('click', function (e) {
+        e.stopPropagation();
+        $('#map_menu').fadeOut(1);
+        //添加标记
+        add_company_mark_repeat(company_id, latLng, window.company_markers);
+    });
+    //删除标记
+    $('#map_menu ul li.delete').unbind('click');
+    $('#map_menu ul li.delete').bind('click', function (e) {
+        e.stopPropagation();
+        $('#map_menu').fadeOut(1);
+        if (marker_station_id == -1) return;
+        $('#myModal_delete').modal('show'); //删除模态框出现
+        //点击模态框的确定按钮
+        $('#myModal_delete .modal-footer button.confirm').unbind('click');
+        $('#myModal_delete .modal-footer button.confirm').bind('click', function (e) {
+            e.stopPropagation();
+            $('#zhezhao').fadeIn(1);
+            $('#myModal_delete').modal('hide'); //删除模态框隐藏
+            var route_id = (0, _functions.parseQueryString)(window.location.href).xml_id;
+
+            for (var i = 0; i < markers.length; i++) {
+                if (marker_station_id == markers[i].origin_station_id) {
+                    var station_id = markers[i].station_id; //站点id
+                    $.ajax({
+                        url: '/myroute/route_delete_station',
+                        type: 'post',
+                        async: false,
+                        data: {
+                            route_id: route_id, station_id: marker_station_id
+                        },
+                        success: function success(res) {
+                            $('#zhezhao').fadeOut(1);
+                            if (res.msg == 'err' || res.msg == 'no') {
+                                //没有这个xml_id或者无session
+                                window.location = login_url;
+                            } else if (res.msg == 'ok') {
+                                google.maps.event.clearInstanceListeners(markers[i]); //清除该实例的所有监听事件
+                                //移除该标记
+                                markers[i].setMap(null);
+                                markers.splice(i, 1);
+                                //刷新聚类标记
+                                clearMarkers_clusterer(window.markers);
+                                //... 左边栏的对应公司站点已选择样式也要删除
+                                var $table_body = $('#company_stations tbody tr.company_station');
+                                for (var j = 0; j < $table_body.length; j++) {
+                                    var li_station_id = Number($table_body.eq(j).attr('station_id'));
+                                    if (marker_station_id == li_station_id) {
+                                        $table_body.eq(j).removeClass('chosen'); //增加添加过的样式
+                                        $table_body.eq(j).find('td.action i').fadeIn(1); //增加添加过的样式
+                                        break;
+                                    }
+                                }
+                                //... 左边栏的对应所选站点也要删除
+                                var $choose_stations = $('#chosen_stations ul li.stations_list');
+                                for (var j = 0; j < $choose_stations.length; j++) {
+                                    var li_station_id = Number($choose_stations.eq(j).attr('station_id'));
+                                    if (li_station_id == station_id) {
+                                        $choose_stations.eq(j).remove();
+                                        break;
+                                    }
+                                }
+                                (0, _marker_drag.draw_line)(); //重新画线
+                            }
+                        },
+                        error: function error(err) {
+                            if (err.status == 500) {
+                                alert('server error,please operation later.');
+                                window.location.reload();
+                            }
+                        }
+                    });
+                    break;
+                }
+            }
+        });
+    });
+}
+
+//地图菜单选项出现的位置
+var map_menu_position = function map_menu_position(e) {
+    //菜单位置显示
+    var top = e.pixel.y; //顶部距离
+    var left = e.pixel.x; //左边距离
+
+    var map_width = $('#google_map').width(); //地图宽度
+    var map_height = $('#google_map').height();
+    var menu_width = $('#map_menu').width(); //菜单宽度
+    var menu_height = $('#map_menu').height();
+
+    if (top > map_height - menu_height) {
+        top = map_height - menu_height;
+    }
+    if (left > map_width - menu_width) {
+        left = map_width - menu_width;
+    }
+    $('#map_menu').css({ top: top, left: left }).fadeIn(1);
+    //添加标记
+};
+
+//标记的点击和右击事件
+window.marker_click = function (marker) {
+    var map_width = $('#google_map').width(); //地图宽度
+    var menu_width = $('#map_menu').width(); //菜单宽度
+
+    /* marker.addListener('click',function(e){
+        var addr_cont=this.addr_content; //地址
+        infoWindow.setContent(addr_cont);
+        infoWindow.open(map, marker);
+    }); */
+    marker.addListener('mouseover', function (e) {
+        var addr_cont = this.addr_content; //地址
+        infoWindow.setContent(addr_cont);
+        infoWindow.open(map, marker);
+    });
+    marker.addListener('rightclick', function (e) {
+        //var position=map_context_menu.getProjection().fromLatLngToDivPixel(e.latLng);
+        var position = (0, _ContextMenu.fromLatLngToPixel)(e.latLng, map);
+        e.pixel = {};
+        e.pixel.x = Math.round(position.x);
+        e.pixel.y = Math.round(position.y);
+        map_menu_position(e); //菜单出现的位置
+        $('#map_menu ul.menu_lists li.add').fadeOut(1);
+        $('#map_menu ul.menu_lists li.delete').fadeIn(1);
+        marker_station_id = this.origin_station_id;
+        var latLng = e.latLng;
+        menu_click(latLng);
+    });
+    //刷新聚类标记
+    clearMarkers_clusterer(window.markers);
+};
+
+module.exports = {
+    add_company_mark_repeat: add_company_mark_repeat
+};
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
 /***/ })
-],[96]);
+],[101]);

@@ -1,4 +1,9 @@
 {
+    "Username": "用戶名",
+    "Password": "密碼",
+    "Register": "註冊",
+    "Comfirm_password": "確認密碼",
+    "Login": "登录",
     "login_out" : "登出",
     "English" : "英語",
     "simplified_chinese" : "簡體中文",

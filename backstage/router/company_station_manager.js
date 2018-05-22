@@ -114,10 +114,10 @@ var station_manage=function(server){
                             var sql ="SELECT ctime FROM "+table_name+" WHERE ";
                             for(var i=0; i<data.length; i++){
                                 let route_id = data[i].route_id;
-                                sql += "routes LIKE '%" +route_id+"%'";
-                                if(i!=0 && i!=data.length-1){
+                                if(i!=0){
                                     sql += " OR ";
                                 }
+                                sql += "routes LIKE '%" +route_id+"%'";
                             }
                             return new Promise((resolve,reject)=>{
                                 connection.query(sql,(err,data1)=>{
@@ -152,11 +152,13 @@ var station_manage=function(server){
                                     routes.push(route_id);
                                 }
                             }
-                            routes = "("+ routes.join(',')+ ")" ;
-                            var mtime = new Date().getTime().toString();
-                            var sql1=`UPDATE ${table_name1} SET station_num = station_num-1,mtime='${mtime}' 
-                                WHERE ctime IN ${routes}`;
-                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                            if(routes.length>0){
+                                routes = "("+ routes.join(',')+ ")" ;
+                                var mtime = new Date().getTime().toString();
+                                var sql1=`UPDATE ${table_name1} SET station_num = station_num-1,mtime='${mtime}' 
+                                    WHERE ctime IN ${routes}`;
+                                sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                            }
                         }
 
                         var table_name2=zuhe_key+'_stations';
@@ -215,24 +217,28 @@ var station_manage=function(server){
                                         console.log(err);
                                         res.status(500).send('connect to database error').end();
                                     }else{
-                                        table_name = zuhe_key+ '_xml_table';
-                                        sql ="SELECT ctime FROM "+table_name+" WHERE ";
-                                        for(var i=0; i<data.length; i++){
-                                            let route_id = data[i].route_id;
-                                            sql += "routes LIKE '%" +route_id+"%'";
-                                            if(i!=0 && i!=data.length-1){
-                                                sql += " OR ";
+                                        if(data.length ==0){
+                                            resolve({routes1:data,routes2:[]});
+                                        }else{
+                                            table_name = zuhe_key+ '_xml_table';
+                                            sql ="SELECT ctime FROM "+table_name+" WHERE ";
+                                            for(var i=0; i<data.length; i++){
+                                                let route_id = data[i].route_id;
+                                                if(i!=0){
+                                                    sql += " OR ";
+                                                }
+                                                sql += "routes LIKE '%" +route_id+"%'";
                                             }
+                                            connection.query(sql,(err,data1)=>{
+                                                connection.release();
+                                                if(err){
+                                                    console.log(err);
+                                                    res.status(500).send('connect to database error').end();
+                                                }else{
+                                                    resolve({routes1:data,routes2:data1});
+                                                }
+                                            });
                                         }
-                                        connection.query(sql,(err,data1)=>{
-                                            connection.release();
-                                            if(err){
-                                                console.log(err);
-                                                res.status(500).send('connect to database error').end();
-                                            }else{
-                                                resolve({routes1:data,routes2:data1});
-                                            }
-                                        });
                                     }
                                 });
                             }
@@ -256,10 +262,12 @@ var station_manage=function(server){
                             routes.push(route_id);
                         }
                     }
-                    routes = "("+ routes.join(',')+ ")" ;
-                    var mtime = new Date().getTime().toString();
-                    var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ctime IN ${routes}`;
-                    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                    if(routes.length>0){
+                        routes = "("+ routes.join(',')+ ")" ;
+                        var mtime = new Date().getTime().toString();
+                        var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ctime IN ${routes}`;
+                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                    }
 
                     //更新stations表
                     var table_name1 = zuhe_key+ '_stations';
@@ -359,24 +367,28 @@ var station_manage=function(server){
                                 console.log(err);
                                 res.status(500).send('connect to database error').end();
                             }else{
-                                table_name = zuhe_key+ '_xml_table';
-                                sql ="SELECT ctime FROM "+table_name+" WHERE ";
-                                for(var i=0; i<data.length; i++){
-                                    let route_id = data[i].route_id;
-                                    sql += "routes LIKE '%" +route_id+"%'";
-                                    if(i!=0 && i!=data.length-1){
-                                        sql += " OR ";
+                                if(data.length ==0){
+                                    resolve({routes1:data,routes2:[]});
+                                }else{
+                                    table_name = zuhe_key+ '_xml_table';
+                                    sql ="SELECT ctime FROM "+table_name+" WHERE ";
+                                    for(var i=0; i<data.length; i++){
+                                        let route_id = data[i].route_id;
+                                        if(i!=0){
+                                            sql += " OR ";
+                                        }
+                                        sql += "routes LIKE '%" +route_id+"%'";
                                     }
+                                    connection.query(sql,(err,data1)=>{
+                                        connection.release();
+                                        if(err){
+                                            console.log(err);
+                                            res.status(500).send('connect to database error').end();
+                                        }else{
+                                            resolve({routes1:data,routes2:data1});
+                                        }
+                                    });
                                 }
-                                connection.query(sql,(err,data1)=>{
-                                    connection.release();
-                                    if(err){
-                                        console.log(err);
-                                        res.status(500).send('connect to database error').end();
-                                    }else{
-                                        resolve({routes1:data,routes2:data1});
-                                    }
-                                });
                             }
                         });
                     })
@@ -396,10 +408,12 @@ var station_manage=function(server){
                                 routes.push(route_id);
                             }
                         }
-                        routes = "("+ routes.join(',')+ ")" ;
-                        var mtime = new Date().getTime().toString();
-                        var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ctime IN ${routes}`;
-                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                        if(routes.length>0){
+                            routes = "("+ routes.join(',')+ ")" ;
+                            var mtime = new Date().getTime().toString();
+                            var sql=`UPDATE ${table_name} SET mtime='${mtime}' WHERE ctime IN ${routes}`;
+                            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+                        }
 
                         var table_name1=zuhe_key+'_stations';
                         var sql1 =`UPDATE ${table_name1} SET station_id='${station_id}',lng='${latLng.lng}',

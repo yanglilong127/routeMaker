@@ -1,4 +1,9 @@
 {
+    "Username": "Username",
+    "Password": "Password",
+    "Register": "Register",
+    "Comfirm_password": "Comfirm password",
+    "Login": "Login",
     "login_out" : "Login Out",
     "English" : "English",
     "simplified_chinese" : "Simplified Chinese",

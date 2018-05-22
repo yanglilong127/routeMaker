@@ -159,6 +159,9 @@ var flightPath =new google.maps.Polyline({ //多线段
 function draw_line(expand=true){
     //按照Choosen Station顺序排列
     var $choose_station=$('#chosen_stations ul.stations_lists li.stations_list');
+    if($choose_station.length ==0){
+        return;
+    }
     for(var i=0; i<$choose_station.length; i++){
         var station_id=Number($choose_station.eq(i).attr('station_id'));
         var station_index =i+1; //站点序号
