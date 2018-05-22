@@ -673,7 +673,7 @@ var countries = {
 
 };
 
-var server_ip = 'localhost:55566'; //台北cloud地址
+var server_ip = 'www.burtyang.top:55566'; //服务区地址
 
 module.exports = {
     login_url: login_url,
