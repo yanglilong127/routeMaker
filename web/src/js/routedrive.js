@@ -5,6 +5,7 @@ import Speech from 'speak-tts';  //文字转语音
 import {parseQueryString} from './functions';  //url解析
 import {fromLatLngToPixel,fromPixelToLatLng} from './ContextMenu';
 import {login_url} from '../configs/setting.js'; //登录地址
+import { setTimeout } from 'timers';
 
 var history_url =  document.referrer;  //跳转过来的url地址
 $('#home').click(function(e){
@@ -47,13 +48,8 @@ Speech.init({
                     window.stations_data=res.stations_data2;
                     route_data.forEach(function(ele,index){
                         if(ele.lang=='zh.CN'){
-                            speak_text='该路线为:'+ ele.transition;
+                            speak_text='该路线为:'+ ele.transition.trim();
                         }
-                    });
-                    Speech.speak({
-                        text: speak_text,
-                        onError: (e) => {console.log('sorry an error occurred.', e)}, // optionnal error callback
-                        //onEnd: () => {console.log('your text has successfully been spoken.')} // optionnal onEnd callback
                     });
                     window.stations_data.forEach(function(ele,index){
                         var marker = new google.maps.Marker({
@@ -80,48 +76,65 @@ Speech.init({
                     }
                     var car_start_position=fromLatLngToPixel(position,map);
                     $('#car').css({left:car_start_position.x-30, top:car_start_position.y-30});
-
-                    setTimeout(function(){  //播放第一个站点
+                    setTimeout(function(){
                         Speech.speak({
-                            text: '起点为:' +window.transition_arra[0],
+                            text: speak_text,
                             onError: (e) => {console.log('sorry an error occurred.', e)}, // optionnal error callback
                             onEnd: () => {
-                                //开始运动,  todo
-                                var start_index=1;  //开始的序列号
-                                car_animate();
-                                function car_animate(){
-                                    if(start_index< window.stations_data.length){
-                                        var position={
-                                            lat : function(){
-                                                return window.stations_data[start_index].lat;
-                                            },
-                                            lng : function(){
-                                                return window.stations_data[start_index].lng;
+                                //console.log('路线读完了');
+                                setTimeout(function(){  //播放第一个站点
+                                    var speak_text = '起点为:' +window.transition_arra[0].trim();
+                                    Speech.speak({
+                                        text: speak_text,
+                                        onError: (e) => {console.log('sorry an error occurred.', e)}, // optionnal error callback
+                                        onEnd: () => {
+                                            //开始运动,  todo
+                                            //console.log('哈哈哈')
+                                            var start_index=1;  //开始的序列号
+                                            setTimeout(function(){
+                                                car_animate();
+                                            },500);
+                                            function car_animate(){
+                                                if(start_index< window.stations_data.length){
+                                                    var position={
+                                                        lat : function(){
+                                                            return window.stations_data[start_index].lat;
+                                                        },
+                                                        lng : function(){
+                                                            return window.stations_data[start_index].lng;
+                                                        }
+                                                    }
+                                                    var car_end_position=fromLatLngToPixel(position,map);
+                                                    $('#car').animate({left:car_end_position.x-30, top:car_end_position.y-30},6000,function(){
+                                                        if(start_index < window.stations_data.length-1){
+                                                            var spaek_txt = '到达站点:' +window.transition_arra[start_index].trim();
+                                                        }else{
+                                                            var spaek_txt = '到达终点站:' +window.transition_arra[start_index].trim();
+                                                        }
+                                                        
+                                                        Speech.speak({
+                                                            text: spaek_txt,
+                                                            onError: (e) => {console.log('sorry an error occurred.', e)}, // optionnal error callback
+                                                            onEnd: () => {
+                                                                //draw_line(start_index);
+                                                                start_index++;
+                                                                setTimeout(function(){
+                                                                    car_animate();
+                                                                },500)
+                                                            }
+                                                        });
+                                                    });
+                                                }
                                             }
                                         }
-                                        var car_end_position=fromLatLngToPixel(position,map);
-                                        $('#car').animate({left:car_end_position.x-30, top:car_end_position.y-30},6000,function(){
-                                            if(start_index < window.stations_data.length-1){
-                                                var spaek_txt = '到达站点:' +window.transition_arra[start_index];
-                                            }else{
-                                                var spaek_txt = '到达终点站:' +window.transition_arra[start_index];
-                                            }
-                                            
-                                            Speech.speak({
-                                                text: spaek_txt,
-                                                onError: (e) => {console.log('sorry an error occurred.', e)}, // optionnal error callback
-                                                onEnd: () => {
-                                                    //draw_line(start_index);
-                                                    start_index++;
-                                                    car_animate();
-                                                }
-                                            });
-                                        });
-                                    }
-                                }
-                            }
+                                    });
+                                },500);
+                            } // optionnal onEnd callback
                         });
-                    },4000);
+                    },500)
+                    
+                    
+
                 }else if(res.msg=='err'){
                     window.location = login_url;
                 }
@@ -132,7 +145,7 @@ Speech.init({
 
 
 
-//将韩语按照顺序存储起来
+//将汉语按照顺序存储起来
 function sort_transiton(){
     window.stations_data.forEach(function(ele,index){
         var station_id= ele.station_id;

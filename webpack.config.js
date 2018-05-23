@@ -256,13 +256,13 @@ module.exports={
         }),
         ******/
 		//压缩
-		/*****/
+		/***
 		new webpack.optimize.UglifyJsPlugin({
 			sourceMap:true,
 			compress:{
 				warnings:false
 			}
-		}),
+		}),**/
 
 		//发布前清空发布目录
 		/*****
