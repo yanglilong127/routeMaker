@@ -8859,7 +8859,8 @@ var fromPixelToLatLng = function fromPixelToLatLng(pixel, map) {
 
 module.exports = {
 	ContextMenu: ContextMenu,
-	fromLatLngToPixel: fromLatLngToPixel
+	fromLatLngToPixel: fromLatLngToPixel,
+	fromPixelToLatLng: fromPixelToLatLng
 };
 
 /***/ }),

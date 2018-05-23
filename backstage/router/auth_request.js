@@ -34,7 +34,7 @@ var some_req_event=function(server){
                     var table_name1=zuhe_key+'_xml_table';
                      //判断是否创建过了该表
                     var sql=`SELECT COUNT(1) as num FROM information_schema.TABLES WHERE 
-                        table_schema='routemaker' AND table_name='${table_name1}'`;
+                        table_schema='myroutemaker' AND table_name='${table_name1}'`;
                     connection.query(sql,(err,data)=>{
                         if(err){
                             console.log(err);

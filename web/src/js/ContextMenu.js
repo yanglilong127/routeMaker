@@ -76,5 +76,6 @@ var fromPixelToLatLng=function(pixel,map){
 
 module.exports={
 	ContextMenu,
-	fromLatLngToPixel
+	fromLatLngToPixel,
+	fromPixelToLatLng
 }
