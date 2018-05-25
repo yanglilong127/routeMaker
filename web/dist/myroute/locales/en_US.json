@@ -65,6 +65,7 @@
     "Routename_exist": "A similar route name exists:",
     "NoChange": "No change",
     "Used_routes": "The merged route that used this route will also be deleted!</br>This route has been used for the following merger route: ",
+    "Online_num": "Online users",
 
     "-------------------" : "----------routeMaker页面的翻译----------",
     "home" : "home",

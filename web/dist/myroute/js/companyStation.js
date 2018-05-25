@@ -5715,181 +5715,6 @@ var Interpolator = function () {
 
 /***/ }),
 
-/***/ 169:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function($) {
-
-var _i18next = __webpack_require__(4);
-
-var _i18next2 = _interopRequireDefault(_i18next);
-
-var _i18nextXhrBackend = __webpack_require__(5);
-
-var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
-
-var _functions = __webpack_require__(6);
-
-var _setting = __webpack_require__(7);
-
-var _pagination = __webpack_require__(23);
-
-var _authmyid = __webpack_require__(31);
-
-var _marker_drag = __webpack_require__(30);
-
-var _company_manager = __webpack_require__(170);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-//加载样式文件
-//公司站点管理页面
-
-__webpack_require__(27);
-__webpack_require__(25);
-__webpack_require__(171);
-
-__webpack_require__(26);
-window.map;
-window.markers = []; //该条路线所有的标记集合
-window.company_markers = []; //添加的公司所有站点
-window.markerClusterer;
-window.infoWindow;
-
-//url解析
-var operate_map = __webpack_require__(172); //所有国家，cloud登录地址
-//输入框名字
-//验证登录的功能
-
-__webpack_require__(173);
-(0, _authmyid.login_check)();
-(0, _authmyid.login_out)(); //登出按钮操作
-
-var url = window.location.href;
-var route_name = decodeURI((0, _functions.parseQueryString)(url).route_name); //路线名
-$('.box1 .home span.route_name').text(route_name);
-//返回主页的连接诶地址
-var home_addr = url.replace('/html/companyStation.html', '/index.html');
-$('.box1 .home button.go_back').click(function (e) {
-    //返回主页
-    e.stopPropagation();
-    window.location = home_addr;
-});
-url = (0, _functions.parseQueryString)(url);
-var company_id = Number(url.uid); //公司id
-//模态框，是否添加标记,初始化模态框
-$('#myModal,#edit_company_stations,#myModal_gohome,#myModal_usedfor').modal({
-    show: false
-});
-//模态框标记名输入框检测
-$('#myModal .modal-body input.mark_name').get(0).oninput = function (e) {
-    e.stopPropagation();
-    (0, _pagination.input_check_fun)($(this), 1000);
-};
-
-//使标记命名框可以拖动
-$('#marker_name').draggable();
-$('#marker_name p.myBg i').click(function (e) {
-    e.stopPropagation();
-    $('#marker_name').fadeOut(); //隐藏
-});
-$('#marker_name .my_inp input.mark_name').get(0).oninput = function (e) {
-    e.stopPropagation();
-    (0, _pagination.input_check_fun)($(this), 1000);
-};
-
-function map_reset() {
-    //地图重新画
-    var place = map.getCenter(); //获取位置
-    var zoom = map.getZoom(); //获取位置
-    window.map = new google.maps.Map(document.getElementById('google_map'), {
-        zoom: zoom,
-        center: place,
-        streetViewControl: true,
-        rotateControl: true,
-        scaleControl: true
-    });
-    //地址搜索控件
-    //map.controls[google.maps.ControlPosition.TOP_LEFT].push(window.map_input);
-    operate_map.place_autocomplete();
-    window.clearMarkers_clusterer(window.markers);
-    (0, _marker_drag.draw_line)(); //重新画线
-}
-
-window.my_company_stations = new _company_manager.Company_station();
-window.my_company_stations.get_company_station().then(function (getData) {
-    //添加公司下所有站点数据
-    my_company_stations.add_all_stations(getData);
-}, function (msg) {
-    $('#zhezhao').fadeOut(1);
-});
-
-//点击搜索按钮
-$('#jingweidu_search i.sosuo').click(function (e) {
-    $('#place_search_form').submit(); //表单提交
-});
-
-//经纬度搜索表单提交
-$('#place_search_form').submit(function (e) {
-    e.preventDefault(); //阻止对表单的提交
-    var input_val = $('#jingweidu_search input.search_place').val().trim();
-    if (!input_val) {
-        //非空，为空即返回
-        return;
-    }
-
-    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
-    var $err_tip = $('#jingweidu_search p.err_tip');
-    input_val = input_val.split(','); //分成数组
-    if (input_val.length != 2) {
-        $err_tip.html(err_tip).stop(true).fadeIn(100);
-        setTimeout(function () {
-            $err_tip.stop(true).fadeOut();
-        }, 5000);
-        return;
-    } else {
-        var latitude = input_val[0].trim(); //纬度
-        var longitude = input_val[1].trim(); //经度
-        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
-            //只要其中有一个不是数值
-            $err_tip.html(err_tip).stop(true).fadeIn(100);
-            setTimeout(function () {
-                $err_tip.stop(true).fadeOut();
-            }, 5000);
-            return;
-        } else {
-            //都是数值类型
-            latitude = Number(latitude);
-            longitude = Number(longitude);
-            //判断值的范围
-            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
-                $err_tip.html(err_tip).stop(true).fadeIn(100);
-                setTimeout(function () {
-                    $err_tip.stop(true).fadeOut();
-                }, 5000);
-                return;
-            }
-
-            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
-            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
-        }
-    }
-    //输入符合要求才能执行下面代码
-    var latLng = {
-        lat: function lat() {
-            return latitude;
-        },
-        lng: function lng() {
-            return longitude;
-        }
-    };
-    operate_map.add_company_mark_repeat(company_id, latLng, window.company_markers);
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
-
-/***/ }),
-
 /***/ 17:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -6188,7 +6013,182 @@ var Connector = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 170:
+/***/ 171:
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function($) {
+
+var _i18next = __webpack_require__(4);
+
+var _i18next2 = _interopRequireDefault(_i18next);
+
+var _i18nextXhrBackend = __webpack_require__(5);
+
+var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
+
+var _functions = __webpack_require__(6);
+
+var _setting = __webpack_require__(7);
+
+var _pagination = __webpack_require__(23);
+
+var _authmyid = __webpack_require__(31);
+
+var _marker_drag = __webpack_require__(30);
+
+var _company_manager = __webpack_require__(172);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+//加载样式文件
+//公司站点管理页面
+
+__webpack_require__(27);
+__webpack_require__(25);
+__webpack_require__(173);
+
+__webpack_require__(26);
+window.map;
+window.markers = []; //该条路线所有的标记集合
+window.company_markers = []; //添加的公司所有站点
+window.markerClusterer;
+window.infoWindow;
+
+//url解析
+var operate_map = __webpack_require__(174); //所有国家，cloud登录地址
+//输入框名字
+//验证登录的功能
+
+__webpack_require__(175);
+(0, _authmyid.login_check)();
+(0, _authmyid.login_out)(); //登出按钮操作
+
+var url = window.location.href;
+var route_name = decodeURI((0, _functions.parseQueryString)(url).route_name); //路线名
+$('.box1 .home span.route_name').text(route_name);
+//返回主页的连接诶地址
+var home_addr = url.replace('/html/companyStation.html', '/index.html');
+$('.box1 .home button.go_back').click(function (e) {
+    //返回主页
+    e.stopPropagation();
+    window.location = home_addr;
+});
+url = (0, _functions.parseQueryString)(url);
+var company_id = Number(url.uid); //公司id
+//模态框，是否添加标记,初始化模态框
+$('#myModal,#edit_company_stations,#myModal_gohome,#myModal_usedfor').modal({
+    show: false
+});
+//模态框标记名输入框检测
+$('#myModal .modal-body input.mark_name').get(0).oninput = function (e) {
+    e.stopPropagation();
+    (0, _pagination.input_check_fun)($(this), 1000);
+};
+
+//使标记命名框可以拖动
+$('#marker_name').draggable();
+$('#marker_name p.myBg i').click(function (e) {
+    e.stopPropagation();
+    $('#marker_name').fadeOut(); //隐藏
+});
+$('#marker_name .my_inp input.mark_name').get(0).oninput = function (e) {
+    e.stopPropagation();
+    (0, _pagination.input_check_fun)($(this), 1000);
+};
+
+function map_reset() {
+    //地图重新画
+    var place = map.getCenter(); //获取位置
+    var zoom = map.getZoom(); //获取位置
+    window.map = new google.maps.Map(document.getElementById('google_map'), {
+        zoom: zoom,
+        center: place,
+        streetViewControl: true,
+        rotateControl: true,
+        scaleControl: true
+    });
+    //地址搜索控件
+    //map.controls[google.maps.ControlPosition.TOP_LEFT].push(window.map_input);
+    operate_map.place_autocomplete();
+    window.clearMarkers_clusterer(window.markers);
+    (0, _marker_drag.draw_line)(); //重新画线
+}
+
+window.my_company_stations = new _company_manager.Company_station();
+window.my_company_stations.get_company_station().then(function (getData) {
+    //添加公司下所有站点数据
+    my_company_stations.add_all_stations(getData);
+}, function (msg) {
+    $('#zhezhao').fadeOut(1);
+});
+
+//点击搜索按钮
+$('#jingweidu_search i.sosuo').click(function (e) {
+    $('#place_search_form').submit(); //表单提交
+});
+
+//经纬度搜索表单提交
+$('#place_search_form').submit(function (e) {
+    e.preventDefault(); //阻止对表单的提交
+    var input_val = $('#jingweidu_search input.search_place').val().trim();
+    if (!input_val) {
+        //非空，为空即返回
+        return;
+    }
+
+    var err_tip = _i18next2.default.t('search_place'); //错误的提示语翻译
+    var $err_tip = $('#jingweidu_search p.err_tip');
+    input_val = input_val.split(','); //分成数组
+    if (input_val.length != 2) {
+        $err_tip.html(err_tip).stop(true).fadeIn(100);
+        setTimeout(function () {
+            $err_tip.stop(true).fadeOut();
+        }, 5000);
+        return;
+    } else {
+        var latitude = input_val[0].trim(); //纬度
+        var longitude = input_val[1].trim(); //经度
+        if (isNaN(latitude) || latitude == '' || isNaN(longitude) || longitude == '') {
+            //只要其中有一个不是数值
+            $err_tip.html(err_tip).stop(true).fadeIn(100);
+            setTimeout(function () {
+                $err_tip.stop(true).fadeOut();
+            }, 5000);
+            return;
+        } else {
+            //都是数值类型
+            latitude = Number(latitude);
+            longitude = Number(longitude);
+            //判断值的范围
+            if (latitude > 90 || latitude < -90 || longitude > 180 || longitude < -180) {
+                $err_tip.html(err_tip).stop(true).fadeIn(100);
+                setTimeout(function () {
+                    $err_tip.stop(true).fadeOut();
+                }, 5000);
+                return;
+            }
+
+            latitude = parseInt(latitude * 1000000) / 1000000; //只取前六位
+            longitude = parseInt(longitude * 1000000) / 1000000; //只取前六位
+        }
+    }
+    //输入符合要求才能执行下面代码
+    var latLng = {
+        lat: function lat() {
+            return latitude;
+        },
+        lng: function lng() {
+            return longitude;
+        }
+    };
+    operate_map.add_company_mark_repeat(company_id, latLng, window.company_markers);
+});
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+
+/***/ 172:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6208,7 +6208,7 @@ var _i18nextXhrBackend2 = _interopRequireDefault(_i18nextXhrBackend);
 
 var _search_place_name = __webpack_require__(32);
 
-var _table_filter = __webpack_require__(46);
+var _table_filter = __webpack_require__(47);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -6919,14 +6919,14 @@ module.exports = {
 
 /***/ }),
 
-/***/ 171:
+/***/ 173:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 172:
+/***/ 174:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -6953,7 +6953,7 @@ var _search_place_name = __webpack_require__(32);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 //companyStation页面的
-var pinyin = __webpack_require__(47); //将汉字转为拼音
+var pinyin = __webpack_require__(48); //将汉字转为拼音
 //输入框名字
 //得到站点id和经纬度
 
@@ -7305,7 +7305,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 173:
+/***/ 175:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -9826,7 +9826,7 @@ function search_place(latlng) {
                 type: 'get',
                 dataType: 'json',
                 success: function success(res) {
-                    $('#zhezhao').fadeOut(1);
+                    //$('#zhezhao').fadeOut(1);
                     if (res.status == 'OK') {
                         var results = res.results[0].address_components; //返回的数组结果
                         var result_len = results.length;
@@ -9868,7 +9868,7 @@ function search_latlng(place) {
                 type: 'get',
                 dataType: 'json',
                 success: function success(res) {
-                    $('#zhezhao').fadeOut(1);
+                    //$('#zhezhao').fadeOut(1);
                     if (res.status == 'OK') {
                         var results = res.results; //返回的数组结果
                         for (var i = 0; i < results.length; i++) {
@@ -10050,7 +10050,7 @@ var use = __WEBPACK_IMPORTED_MODULE_0__i18next_js__["a" /* default */].use.bind(
 
 /***/ }),
 
-/***/ 46:
+/***/ 47:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10240,7 +10240,7 @@ module.exports = {
 
 /***/ }),
 
-/***/ 47:
+/***/ 48:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10268,8 +10268,8 @@ function buildPinyinCache(dict_combo){
   return uncomboed;
 }
 
-const PINYIN_DICT = buildPinyinCache(__webpack_require__(48));
-const Pinyin = __webpack_require__(49);
+const PINYIN_DICT = buildPinyinCache(__webpack_require__(49));
+const Pinyin = __webpack_require__(50);
 const pinyin = new Pinyin(PINYIN_DICT);
 
 module.exports = pinyin.convert.bind(pinyin);
@@ -10284,7 +10284,7 @@ module.exports.STYLE_FIRST_LETTER = Pinyin.STYLE_FIRST_LETTER;
 
 /***/ }),
 
-/***/ 48:
+/***/ 49:
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -11835,13 +11835,21 @@ module.exports = {
 
 /***/ }),
 
-/***/ 49:
+/***/ 5:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__(20).default;
+
+
+/***/ }),
+
+/***/ 50:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-const assign = __webpack_require__(50);
+const assign = __webpack_require__(51);
 // XXX: Symbol when web support.
 const PINYIN_STYLE = {
   NORMAL: 0,       // 普通风格，不带音标。
@@ -11862,7 +11870,7 @@ const INITIALS = "b,p,m,f,d,t,n,l,g,k,h,j,q,x,r,zh,ch,sh,z,c,s".split(",");
 // 韵母表。
 //const FINALS = "ang,eng,ing,ong,an,en,in,un,er,ai,ei,ui,ao,ou,iu,ie,ve,a,o,e,i,u,v".split(",");
 // 带音标字符。
-const PHONETIC_SYMBOL = __webpack_require__(51);
+const PHONETIC_SYMBOL = __webpack_require__(52);
 const RE_PHONETIC_SYMBOL = new RegExp("([" + Object.keys(PHONETIC_SYMBOL).join("") + "])", "g");
 const RE_TONE2 = /([aeoiuvnm])([0-4])$/;
 
@@ -12053,15 +12061,7 @@ module.exports = Pinyin;
 
 /***/ }),
 
-/***/ 5:
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = __webpack_require__(20).default;
-
-
-/***/ }),
-
-/***/ 50:
+/***/ 51:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12159,7 +12159,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 
 /***/ }),
 
-/***/ 51:
+/***/ 52:
 /***/ (function(module, exports) {
 
 // 带音标字符。
@@ -12566,4 +12566,4 @@ module.exports = {
 
 /***/ })
 
-},[169]);
+},[171]);
