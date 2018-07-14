@@ -113,8 +113,30 @@ var countries={
 
 var server_ip = 'www.burtyang.top:55566';  //服务区地址
 
+//操作指令对应表
+var operation_command= {
+    "1": "Create New Route",
+    "2": "Create Merge Route",
+    "3": "Rename Route",
+    "4": "Change Description",
+    "5": "Add Language",
+    "6": "Subside Language",
+    "7": "Change Stops Translation",
+    "8": "Clone Route",
+    "9": "Download XML File",
+    "10": "Delete Route",
+    "11": "Add Company Stop",
+    "12": "Add Route Stop",
+    "13": "Delete Route Stop",
+    "14": "Sortable Route Stop",
+    "15": "Save Stop Information",
+    "16": "Change Stop Information",
+    "17": "Delete Company Stop"
+}
+
 module.exports={
     login_url,
     countries,
-    server_ip
+    server_ip,
+    operation_command
 }

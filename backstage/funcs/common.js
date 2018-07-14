@@ -1,4 +1,5 @@
 const fs=require('fs');
+const event_poll=require('../router/dbHelper');  //事务回滚
 
 /** 读取文件夹占用空间大小
  * 参数 为文件夹地址
@@ -61,10 +62,68 @@ function del(dst){
     fs.rmdirSync(dst);
 }
 
+//IP地址获取以及切片
+function get_IP(req){
+    var IP_addr = req.headers['x-forwarded-for'] ||
+                    req.connection.remoteAddress ||
+                    req.socket.remoteAddress ||
+                    req.connection.socket.remoteAddress;;  //IP地址
+    IP_addr = IP_addr.toString().split('');
+    IP_addr = IP_addr.slice(IP_addr.lastIndexOf(':')+1).join('');
+    return IP_addr;
+}
+
+//对历史记录的操作
+/**
+ * 参数1 req
+ * 参数2 operation_order String 操作指令
+ * 参数3 数组，需要批量操作表的数组
+ * 参数
+ * 
+ * **/
+function operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name){
+    var sz=req.session['user_sz'];
+    var username=req.session['user_name']; //用户名
+    var IP_addr = get_IP(req);
+    var operation_order = operation_command[operation_order.toString()];
+    var table_name="operation_history";
+
+    route_name = route_name? route_name: "";
+    var sql = `INSERT INTO ${table_name}(route_name,username,
+            oper_time,operation,detail,IP) VALUES("${route_name}",
+            "${username}",NOW(),"${operation_order}","${detail_desc}",'${IP_addr}')`;
+    
+    sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+    return sqlParamsEntity;
+}
+
+//操作指令对应表
+var operation_command= {
+    "1": "Create New Route",
+    "2": "Create Merge Route",
+    "3": "Rename Route",
+    "4": "Change Description",
+    "5": "Add Language",
+    "6": "Subside Language",
+    "7": "Change Stops Translation",
+    "8": "Clone Route",
+    "9": "Download XML File",
+    "10": "Delete Route",
+    "11": "Add Company Stop",
+    "12": "Add Route Stop",
+    "13": "Delete Route Stop",
+    "14": "Sortable Route Stop",
+    "15": "Save Stop Information",
+    "16": "Change Stop Information",
+    "17": "Delete Company Stop"
+}
 
 
 module.exports={
     dirSize,
 	forMatDate,
-	del
+	del,
+    get_IP,
+    operation_history,
+    operation_command
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RouteEdit>
+  <Stop/>
+  <Route>
+    <RouteInfo Number="xiaogan-hankou" ID="30019474" Common="" BusLeaveArea="0" BusStopArea="0" RoundTrip="true">
+      <NameTable LangCode="en.US" Name="xiaogan-hankou" Voice=""/>
+      <NameTable LangCode="zh.CN" Name="" Voice=""/>
+    </RouteInfo>
+  </Route>
+</RouteEdit>

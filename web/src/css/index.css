@@ -146,6 +146,8 @@ button.go_company{
         position: relative;
         button.btn-primary{
             margin-left:10px;
+            color:#fff;
+            a{ color: #fff;}
         }
         input.search{
             position:absolute;

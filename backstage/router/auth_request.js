@@ -108,6 +108,7 @@ var some_req_event=function(server){
                                                  ON DELETE CASCADE ON UPDATE CASCADE
                                      ) default charset = utf8`;
                                  sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql5));
+
                                  //执行多sql语句
                                  event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                      if(err){

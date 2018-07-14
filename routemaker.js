@@ -4,6 +4,7 @@ const compression=require('compression');  //开启gzip压缩
 const bodyParser=require('body-parser');     //post方式数值
 const cookieParser=require('cookie-parser');
 const consolidate=require('consolidate');
+const ejs= require('ejs');
 const session=require('connect-session');
 const MysqlStore=require('connect-mysql')(expressSession);
 const db=require('./backstage/router/databaseConnection').pool;
@@ -76,7 +77,7 @@ setInterval(sessionCleanup, 1800000);
 //输出什么东西
 app.set('view engine','html');
 //模版文件放在哪儿
-app.set('views','./web/dist/html');
+app.set('views','./web/dist/myroute/html');
 //哪种模版引擎
 app.engine('html',consolidate.ejs);
 

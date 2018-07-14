@@ -59,6 +59,7 @@
     "End" : "End",
     "Generator" : "Generator xml",
     "CompanyStationManage" : "Company Stations Manage",
+    "OperationHistory":"Operation History",
     "Transition_undone": "Translation not completed",
     "Complete_translation" : "Temporarily saved successfully,but translation has not yet been completed.",
     "modify_transition_tip" : "Modifying a station's translation will change all routes or merge routes that use the station.",
@@ -118,5 +119,14 @@
     "Delete_success": "Delete successfully!",
 
     "Simulated_drive_err": "The number of stations is at least 1, and the number of languages is at least 2",
-    "Simulated_CN": "Please add perfect Chinese language information"
+    "Simulated_CN": "Please add perfect Chinese language information",
+
+    "------------------------" : "----------Operation history页面的翻译----------",
+    "User": "User",
+    "Apply": "Apply",
+    "Date_range": "Date Range",
+    "Company": "Company",
+    "Enter_search_content": "Enter search content",
+    "Login_staus_invalid": "Invalid login status",
+    "Time": "Time"
 }

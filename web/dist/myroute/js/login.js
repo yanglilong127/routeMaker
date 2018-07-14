@@ -1,4 +1,4 @@
-webpackJsonp([5],{
+webpackJsonp([6],{
 
 /***/ 0:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
@@ -101,21 +101,21 @@ var Logger = function () {
 
 /***/ }),
 
-/***/ 11:
+/***/ 10:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__logger_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__EventEmitter_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ResourceStore_js__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Translator_js__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__LanguageUtils_js__ = __webpack_require__(14);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__PluralResolver_js__ = __webpack_require__(15);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Interpolator_js__ = __webpack_require__(16);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__BackendConnector_js__ = __webpack_require__(17);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__CacheConnector_js__ = __webpack_require__(18);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__defaults_js__ = __webpack_require__(19);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__postProcessor_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ResourceStore_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__Translator_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__LanguageUtils_js__ = __webpack_require__(13);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__PluralResolver_js__ = __webpack_require__(14);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__Interpolator_js__ = __webpack_require__(15);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__BackendConnector_js__ = __webpack_require__(16);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__CacheConnector_js__ = __webpack_require__(17);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__defaults_js__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__postProcessor_js__ = __webpack_require__(8);
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
@@ -525,7 +525,7 @@ var I18n = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 12:
+/***/ 11:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -680,13 +680,13 @@ var ResourceStore = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 13:
+/***/ 12:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__logger_js__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__EventEmitter_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__postProcessor_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__postProcessor_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__utils_js__ = __webpack_require__(3);
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
@@ -1000,7 +1000,7 @@ var Translator = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 14:
+/***/ 13:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1131,7 +1131,7 @@ var LanguageUtil = function () {
 
 /***/ }),
 
-/***/ 15:
+/***/ 14:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1318,7 +1318,7 @@ var PluralResolver = function () {
 
 /***/ }),
 
-/***/ 16:
+/***/ 15:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1514,7 +1514,7 @@ var Interpolator = function () {
 
 /***/ }),
 
-/***/ 17:
+/***/ 16:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1812,7 +1812,7 @@ var Connector = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 18:
+/***/ 17:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1898,100 +1898,7 @@ var Connector = function (_EventEmitter) {
 
 /***/ }),
 
-/***/ 182:
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(jQuery, $) {
-
-//登录 注册页面的脚本
-
-//链接字体图标
-__webpack_require__(25);
-//链接login.css
-__webpack_require__(183);
-__webpack_require__(26);
-
-//添加自定义校验
-jQuery.validator.addMethod('noChina', function (value, element) {
-    var inp = /[^\w_]/g;
-    return this.optional(element) || !inp.test(value);
-}, 'Only support number,letter and underline');
-//表单验证
-$('#myform').validate({
-    debug: true, //只验证，不提交表单
-    rules: {
-        user: {
-            required: true,
-            noChina: true
-        },
-        password: {
-            required: true,
-            noChina: true
-        }
-    },
-    messages: {
-        user: { required: 'require fields' },
-        password: { required: 'require fields' }
-    },
-    submitHandler: function submitHandler() {
-        //通过验证后运行的函数
-        var username = $('#myform .denglu:eq(0) input[name=user]').val().trim(); //用户名
-        var password = $('#myform .denglu:eq(1) input[name=password]').val().trim(); //密码
-        $.ajax({
-            url: '/myroute/login',
-            type: 'post',
-            data: {
-                username: username,
-                password: password
-            },
-            success: function success(data) {
-                if (data.msg === 'ok') {
-                    //验证成功
-                    sz, uid, uname, salt, utc, unlock;
-                    var sz = data.sz; //服务区
-                    var uid = data.uid; //用户名ID
-                    var uname = data.uname; //用户名ID
-                    var salt = data.salt; //用户名ID
-                    var utc = data.utc; //用户名ID
-                    var unlock = data.unlock; //用户名ID
-                    var fullname = uname; //用户名ID
-
-                    window.location = '/myroute/index.html?sz=' + sz + '&uid=' + uid + '&uname=' + uname + '&salt=' + salt + '&utc=' + utc + '&unlock=' + unlock + '&fullname=' + fullname;
-                } else if (data.msg === 'no') {
-                    //不存在此用户
-                    $('#tooltip').text('no this username').fadeIn(500);
-                    $('#myform .denglu:eq(1) input[name=password]').val(''); //密码
-                    setTimeout(function () {
-                        //错误信息提示显示4秒
-                        $('#tooltip').fadeOut(300);
-                    }, 4000);
-                } else {
-                    //错误提示信息显示
-                    $('#tooltip').text('username or password error').fadeIn(500);
-                    //$('#myform .denglu:eq(0) input[name=user]').val('');//用户名
-                    $('#myform .denglu:eq(1) input[name=password]').val(''); //密码
-                    setTimeout(function () {
-                        //错误信息提示显示4秒
-                        $('#tooltip').fadeOut(300);
-                    }, 4000);
-                }
-            }
-        });
-    }
-});
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1), __webpack_require__(1)))
-
-/***/ }),
-
-/***/ 183:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 19:
+/***/ 18:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2082,77 +1989,100 @@ function transformOptions(options) {
 
 /***/ }),
 
-/***/ 2:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/***/ 185:
+/***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+/* WEBPACK VAR INJECTION */(function(jQuery, $) {
 
-var EventEmitter = function () {
-  function EventEmitter() {
-    _classCallCheck(this, EventEmitter);
+//登录 注册页面的脚本
 
-    this.observers = {};
-  }
+//链接字体图标
+__webpack_require__(22);
+//链接login.css
+__webpack_require__(186);
+__webpack_require__(23);
 
-  EventEmitter.prototype.on = function on(events, listener) {
-    var _this = this;
-
-    events.split(' ').forEach(function (event) {
-      _this.observers[event] = _this.observers[event] || [];
-      _this.observers[event].push(listener);
-    });
-  };
-
-  EventEmitter.prototype.off = function off(event, listener) {
-    var _this2 = this;
-
-    if (!this.observers[event]) {
-      return;
-    }
-
-    this.observers[event].forEach(function () {
-      if (!listener) {
-        delete _this2.observers[event];
-      } else {
-        var index = _this2.observers[event].indexOf(listener);
-        if (index > -1) {
-          _this2.observers[event].splice(index, 1);
+//添加自定义校验
+jQuery.validator.addMethod('noChina', function (value, element) {
+    var inp = /[^\w_]/g;
+    return this.optional(element) || !inp.test(value);
+}, 'Only support number,letter and underline');
+//表单验证
+$('#myform').validate({
+    debug: true, //只验证，不提交表单
+    rules: {
+        user: {
+            required: true,
+            noChina: true
+        },
+        password: {
+            required: true,
+            noChina: true
         }
-      }
-    });
-  };
+    },
+    messages: {
+        user: { required: 'require fields' },
+        password: { required: 'require fields' }
+    },
+    submitHandler: function submitHandler() {
+        //通过验证后运行的函数
+        var username = $('#myform .denglu:eq(0) input[name=user]').val().trim(); //用户名
+        var password = $('#myform .denglu:eq(1) input[name=password]').val().trim(); //密码
+        $.ajax({
+            url: '/myroute/login',
+            type: 'post',
+            data: {
+                username: username,
+                password: password
+            },
+            success: function success(data) {
+                if (data.msg === 'ok') {
+                    //验证成功
+                    sz, uid, uname, salt, utc, unlock;
+                    var sz = data.sz; //服务区
+                    var uid = data.uid; //用户名ID
+                    var uname = data.uname; //用户名ID
+                    var salt = data.salt; //用户名ID
+                    var utc = data.utc; //用户名ID
+                    var unlock = data.unlock; //用户名ID
+                    var fullname = uname; //用户名ID
 
-  EventEmitter.prototype.emit = function emit(event) {
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
+                    window.location = '/myroute/index.html?sz=' + sz + '&uid=' + uid + '&uname=' + uname + '&salt=' + salt + '&utc=' + utc + '&unlock=' + unlock + '&fullname=' + fullname;
+                } else if (data.msg === 'no') {
+                    //不存在此用户
+                    $('#tooltip').text('no this username').fadeIn(500);
+                    $('#myform .denglu:eq(1) input[name=password]').val(''); //密码
+                    setTimeout(function () {
+                        //错误信息提示显示4秒
+                        $('#tooltip').fadeOut(300);
+                    }, 4000);
+                } else {
+                    //错误提示信息显示
+                    $('#tooltip').text('username or password error').fadeIn(500);
+                    //$('#myform .denglu:eq(0) input[name=user]').val('');//用户名
+                    $('#myform .denglu:eq(1) input[name=password]').val(''); //密码
+                    setTimeout(function () {
+                        //错误信息提示显示4秒
+                        $('#tooltip').fadeOut(300);
+                    }, 4000);
+                }
+            }
+        });
     }
-
-    if (this.observers[event]) {
-      var cloned = [].concat(this.observers[event]);
-      cloned.forEach(function (observer) {
-        observer.apply(undefined, args);
-      });
-    }
-
-    if (this.observers['*']) {
-      var _cloned = [].concat(this.observers['*']);
-      _cloned.forEach(function (observer) {
-        var _ref;
-
-        observer.apply(observer, (_ref = [event]).concat.apply(_ref, args));
-      });
-    }
-  };
-
-  return EventEmitter;
-}();
-
-/* harmony default export */ __webpack_exports__["a"] = (EventEmitter);
+});
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1), __webpack_require__(1)))
 
 /***/ }),
 
-/***/ 20:
+/***/ 186:
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+
+/***/ 19:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2164,11 +2094,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _utils = __webpack_require__(21);
+var _utils = __webpack_require__(20);
 
 var utils = _interopRequireWildcard(_utils);
 
-var _ajax = __webpack_require__(22);
+var _ajax = __webpack_require__(21);
 
 var _ajax2 = _interopRequireDefault(_ajax);
 
@@ -2282,7 +2212,77 @@ exports.default = Backend;
 
 /***/ }),
 
-/***/ 21:
+/***/ 2:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var EventEmitter = function () {
+  function EventEmitter() {
+    _classCallCheck(this, EventEmitter);
+
+    this.observers = {};
+  }
+
+  EventEmitter.prototype.on = function on(events, listener) {
+    var _this = this;
+
+    events.split(' ').forEach(function (event) {
+      _this.observers[event] = _this.observers[event] || [];
+      _this.observers[event].push(listener);
+    });
+  };
+
+  EventEmitter.prototype.off = function off(event, listener) {
+    var _this2 = this;
+
+    if (!this.observers[event]) {
+      return;
+    }
+
+    this.observers[event].forEach(function () {
+      if (!listener) {
+        delete _this2.observers[event];
+      } else {
+        var index = _this2.observers[event].indexOf(listener);
+        if (index > -1) {
+          _this2.observers[event].splice(index, 1);
+        }
+      }
+    });
+  };
+
+  EventEmitter.prototype.emit = function emit(event) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    if (this.observers[event]) {
+      var cloned = [].concat(this.observers[event]);
+      cloned.forEach(function (observer) {
+        observer.apply(undefined, args);
+      });
+    }
+
+    if (this.observers['*']) {
+      var _cloned = [].concat(this.observers['*']);
+      _cloned.forEach(function (observer) {
+        var _ref;
+
+        observer.apply(observer, (_ref = [event]).concat.apply(_ref, args));
+      });
+    }
+  };
+
+  return EventEmitter;
+}();
+
+/* harmony default export */ __webpack_exports__["a"] = (EventEmitter);
+
+/***/ }),
+
+/***/ 20:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2321,7 +2321,7 @@ function extend(obj) {
 
 /***/ }),
 
-/***/ 22:
+/***/ 21:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2405,14 +2405,14 @@ exports.default = ajax;
 
 /***/ }),
 
-/***/ 25:
+/***/ 22:
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
 
-/***/ 26:
+/***/ 23:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2640,7 +2640,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setDefaultNamespace", function() { return setDefaultNamespace; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "t", function() { return t; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "use", function() { return use; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__i18next_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__i18next_js__ = __webpack_require__(10);
 
 
 /* harmony default export */ __webpack_exports__["default"] = (__WEBPACK_IMPORTED_MODULE_0__i18next_js__["a" /* default */]);
@@ -2666,12 +2666,12 @@ var use = __WEBPACK_IMPORTED_MODULE_0__i18next_js__["a" /* default */].use.bind(
 /***/ 5:
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(20).default;
+module.exports = __webpack_require__(19).default;
 
 
 /***/ }),
 
-/***/ 9:
+/***/ 8:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -2695,4 +2695,4 @@ module.exports = __webpack_require__(20).default;
 
 /***/ })
 
-},[182]);
+},[185]);

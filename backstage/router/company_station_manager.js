@@ -5,6 +5,7 @@ const xml2js=require('xml2js');
 const builder=new xml2js.Builder();
 const parser=new xml2js.Parser();
 const sessionCheck=require('./check_session.js');  //更新最后操作的时间
+const common_funs=require('../funcs/common');  //一些公共函数
 
 //数据库连接
 const db=require('./databaseConnection').pool;
@@ -62,6 +63,9 @@ var station_manage=function(server){
                                         ('${the_time}','${station_id}','en.US','${stations_name}')`;
                                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
 
+                                var operation_order='11'; //操作指令
+                                var detail_desc= "Added a stop named "+stations_name;   //详细描述
+                                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc);
                                 event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                     if(err){
                                         //console.log('事务处理失败');
@@ -90,6 +94,7 @@ var station_manage=function(server){
         var zuhe_key=sz+'_'+username;
 
         var station_id=req.body.station_id;  //站点id
+        var station_name=req.body.station_name;  //站点名
         if(ID && sz && username){
             db.getConnection((err,connection)=>{
                 if(err){
@@ -163,7 +168,10 @@ var station_manage=function(server){
 
                         var table_name2=zuhe_key+'_stations';
                         var sql2=`DELETE FROM ${table_name2} WHERE station_id='${station_id}'`;
-                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));    
+                        sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));   
+                        var operation_order='17'; //操作指令
+                        var detail_desc= "Deleted a stop named "+station_name;   //详细描述
+                        sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc); 
                         event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                             if(err){
                                 res.status(500).send('connect to database error').end();
@@ -280,6 +288,9 @@ var station_manage=function(server){
                     var sql2 = `UPDATE ${table_name2} SET transition='${station_name}'
                                 WHERE station_id='${station_id}' AND lang='en.US'`;
                     sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
+                    var operation_order='16'; //操作指令
+                    var detail_desc= "Changed information about the stop named "+station_name;   //详细描述
+                    sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc); 
                     event_poll.execTrans(sqlParamsEntity,(err,info)=>{
                         if(err){
                             console.log(err);
@@ -351,6 +362,7 @@ var station_manage=function(server){
         var zuhe_key=sz+'_'+username;
 
         var station_id=req.body.station_id;  //站点id
+        var station_name=req.body.station_name;  //站点id
         var origin_station_id=req.body.origin_station_id;  //原始站点id
         var latLng=req.body.latLng;  //经纬度
         if(ID && sz && username){
@@ -419,6 +431,9 @@ var station_manage=function(server){
                         var sql1 =`UPDATE ${table_name1} SET station_id='${station_id}',lng='${latLng.lng}',
                             lat='${latLng.lat}' WHERE station_id='${origin_station_id}'`;
                         sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+                        var operation_order='16'; //操作指令
+                        var detail_desc= "Moved the stop named "+station_name;   //详细描述
+                        sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc); 
                         event_poll.execTrans(sqlParamsEntity,(err,info)=>{
                             if(err){
                                 console.log(err);

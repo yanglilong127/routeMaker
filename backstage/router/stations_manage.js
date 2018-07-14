@@ -5,6 +5,7 @@ const xml2js=require('xml2js');
 const builder=new xml2js.Builder();
 const parser=new xml2js.Parser();
 const sessionCheck=require('./check_session.js');  //更新最后操作的时间
+const common_funs=require('../funcs/common');  //一些公共函数
 
 //数据库连接
 const db=require('./databaseConnection').pool;
@@ -50,6 +51,7 @@ var station_manage=function(server){
         var zuhe_key=sz+'_'+username;
 
         var xml_id=req.body.xml_id;  //路线route_id
+        var route_name=req.body.route_name;  //路线名
         var ctime=req.body.ctime;  //创建时间
         var station_id=req.body.station_id;  //站点id
         var stations_name=req.body.stations_name; //站点名
@@ -117,6 +119,10 @@ var station_manage=function(server){
                                             }
                                         }
                                         sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
+
+                                        var operation_order='11'; //操作指令
+                                        var detail_desc= "Added a stop named "+stations_name;   //详细描述
+                                        sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
 
                                         event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                             if(err){
@@ -199,8 +205,10 @@ var station_manage=function(server){
         var zuhe_key=sz+'_'+username;
 
         var route_id=req.body.route_id;  //路线route_id
+        var route_name=req.body.route_name; //路线名
         var station_id=req.body.station_id;  //站点station_id
         var station_ctime=req.body.station_ctime;  //路线新增站点时间
+        var station_name=req.body.station_name; //站点名称
         if(ID && sz && username){
             function get_data(){
                 return new Promise(function(resolve,reject){
@@ -279,6 +287,11 @@ var station_manage=function(server){
                                 var sql2=`INSERT INTO ${table_name2} (ctime,route_id,station_id) VALUES 
                                         ('${station_ctime}','${route_id}','${station_id}')`;
                                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
+
+                                var operation_order='12'; //操作指令
+                                var detail_desc= "Added a stop named "+station_name
+                                                +" for "+route_name+" route";   //详细描述
+                                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
                                 event_poll.execTrans(sqlParamsEntity,function(err,info){
                                     if(err){
                                         console.log(err);
@@ -313,6 +326,8 @@ var station_manage=function(server){
 
         var route_id=req.body.route_id;  //路线route_id
         var station_id=req.body.station_id;  //站点station_id
+        var station_name=req.body.station_name;
+        var route_name=req.body.route_name;
         if(ID && sz && username){
             db.getConnection((err,connection)=>{
                 if(err){
@@ -342,6 +357,10 @@ var station_manage=function(server){
                                         station_id='${station_id}'`;
                                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
 
+                                var operation_order='13'; //操作指令
+                                var detail_desc= "Delete a stop named "+station_name
+                                                +" from "+route_name+" route";   //详细描述
+                                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
                                 event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                     if(err){
                                         res.status(500).send('connect to database error').end();
@@ -549,6 +568,7 @@ var station_manage=function(server){
 
         if(ID && sz && username){
             var route_id = req.body.xml_id;
+            var route_name=req.body.route_name;
             var get_data = req.body.send_data;
             return new Promise(function(resolve,reject){
                 db.getConnection((err,connection)=>{
@@ -659,6 +679,9 @@ var station_manage=function(server){
                     }
                 }
                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2)); 
+                var operation_order='15'; //操作指令
+                var detail_desc= "Saved information of "+route_name+ " route";
+                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
                 event_poll.execTrans(sqlParamsEntity,function(err,info){
                     if(err){
                         console.log(err);

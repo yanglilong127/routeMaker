@@ -54,6 +54,10 @@ var xmlManager=function(server){
                                         VALUES('${ctime}','${ctime}','en.US','${filename}')`;
                                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql2));
 
+                                //记录操作行为
+                                var operation_order='1'; //操作指令
+                                var detail_desc= "Created a route named "+filename;   //详细描述
+                                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,filename);
                                 event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                                     if(err){
                                         //console.log('事务处理失败');
@@ -161,25 +165,23 @@ var xmlManager=function(server){
 
         var xml_id=req.body.xml_id;//创建文件的时间戳
         var description=req.body.description;
+        var route_name=req.body.route_name;
         if(ID && sz && username){
-            db.getConnection((err,connection)=>{
+            var sqlParamsEntity = [];
+            var table_name=sz+'_'+username+'_xml_table';
+            var sql=`UPDATE ${table_name} SET description='${description}'
+                    WHERE ctime=${xml_id}`;
+            sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+            //记录操作行为
+            var operation_order='4'; //操作指令
+            var detail_desc= "Changed the "+route_name+" route description to:"+description;   //详细描述
+            sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
+            event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                 if(err){
-                    console.log(err);
                     res.status(500).send('connect to database error').end();
                 }else{
-                    var table_name=sz+'_'+username+'_xml_table';
-                    var sql=`UPDATE ${table_name} SET description='${description}'
-                            WHERE ctime=${xml_id}`;
-                    connection.query(sql,(err)=>{
-                        connection.release();
-                        if(err){
-                            console.log(err);
-                            res.status(500).send('connect to database error').end();
-                        }else{
-                            sessionCheck.update_database_last_time(req);
-                            res.send({msg:'ok'}).end();
-                        }
-                    });
+                    sessionCheck.update_database_last_time(req);
+                    res.send({msg:'ok'}).end();
                 }
             });
         }else{
@@ -249,6 +251,11 @@ var xmlManager=function(server){
                         var sql3=`UPDATE ${table_name} SET mtime='${mtime}'
                             WHERE routes LIKE '%${xml_id}%'`;
                         sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
+
+                        //记录操作行为
+                        var operation_order='3'; //操作指令
+                        var detail_desc= "Renamed the "+filename+" route as "+new_filename;   //详细描述
+                        sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,new_filename);
                         event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                             if(err){
                                 //console.log('事务处理失败');
@@ -332,44 +339,43 @@ var xmlManager=function(server){
             };
             del_origin_xml()
             .then(function(data){
-                db.getConnection((err,connection)=>{
+                var sqlParamsEntity = [];
+                var table_name=sz+'_'+username+'_xml_table';
+                var sql=`DELETE FROM ${table_name} WHERE ctime='${xml_id}' OR routes LIKE '%${xml_id}%'`;
+                sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql));
+
+                //记录操作行为
+                var operation_order='10'; //操作指令
+                var detail_desc= "Deleted the "+filename+ " route.";   //详细描述
+                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,filename);
+                event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                     if(err){
-                        console.log(err);
+                        //console.log('事务处理失败');
                         res.status(500).send('connect to database error').end();
                     }else{
-                        var table_name=sz+'_'+username+'_xml_table';
-                        var sql=`DELETE FROM ${table_name} WHERE ctime='${xml_id}' OR routes LIKE '%${xml_id}%'`;
-                        connection.query(sql,(err)=>{
-                            connection.release();
-                            if(err){
-                                console.log(err);
-                                res.status(500).send('connect to database error').end();
-                            }else{
-                                sessionCheck.update_database_last_time(req);
-                                //删除原先的xml
-                                var i_index=0;
-                                delete_xml();
-                                function delete_xml(){
-                                    var filename=data[i_index].filename;
-                                    var mtime = Number(data[i_index].mtime);
-                                    mtime = new Date(mtime);  //将时间戳转为时间对象
-                                    mtime = common_funs.forMatDate(mtime,false);
-                                    filename = "RouteEdit_"+filename+"_" + mtime + '.xml';
-                                    var file_dir='./web/dist/myroute/profiles/'+zuhe_key+'/'+filename;
-                                    fs.stat(file_dir,(err,sta)=>{
-                                        if(sta){
-                                            fs.unlinkSync(file_dir);
-                                        }
-                                        i_index ++;
-                                        if(i_index < data.length){
-                                            delete_xml();
-                                        }else{
-                                            res.send({msg:'ok'}).end();
-                                        }
-                                    });
+                        sessionCheck.update_database_last_time(req);
+                        //删除原先的xml
+                        var i_index=0;
+                        delete_xml();
+                        function delete_xml(){
+                            var filename=data[i_index].filename;
+                            var mtime = Number(data[i_index].mtime);
+                            mtime = new Date(mtime);  //将时间戳转为时间对象
+                            mtime = common_funs.forMatDate(mtime,false);
+                            filename = "RouteEdit_"+filename+"_" + mtime + '.xml';
+                            var file_dir='./web/dist/myroute/profiles/'+zuhe_key+'/'+filename;
+                            fs.stat(file_dir,(err,sta)=>{
+                                if(sta){
+                                    fs.unlinkSync(file_dir);
                                 }
-                            }
-                        });
+                                i_index ++;
+                                if(i_index < data.length){
+                                    delete_xml();
+                                }else{
+                                    res.send({msg:'ok'}).end();
+                                }
+                            });
+                        }
                     }
                 });
             },function(msg){
@@ -708,6 +714,7 @@ var xmlManager=function(server){
         var action=req.params.action;  //操作
         var language_num=req.body.language_num;  //语言数目
         var xml_id=req.body.xml_id;  //路线route_id
+        var route_name=req.body.route_name;  //路线
         if(ID && sz && username){
             var route_id=req.body['xml_id']; //路线id
             var language=req.body['jianchen']; //增加的语言简称
@@ -790,7 +797,11 @@ var xmlManager=function(server){
                     var sql3=`UPDATE ${table_name3} SET language_num=${language_num},languages=CONCAT(languages,',${language}')
                             ,mtime='${mtime}' WHERE ctime=${xml_id}`;
                     sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
-
+                    //记录操作行为
+                    var operation_order='5'; //操作指令
+                    var detail_desc= "Added the "+language+" language for "
+                                     +route_name+" route";   //详细描述
+                    sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
                     event_poll.execTrans(sqlParamsEntity, function(err, info){
                         if(err){
                             console.log(err);
@@ -881,6 +892,11 @@ var xmlManager=function(server){
                         mtime='${mtime}' WHERE ctime=${xml_id}`;
                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
 
+                //记录操作行为
+                var operation_order='6'; //操作指令
+                var detail_desc= "Deleted the "+language+" language for "
+                                 +route_name+" route";   //详细描述
+                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
                 event_poll.execTrans(sqlParamsEntity, function(err, info){
                     if(err){
                         console.log(err);
@@ -1106,6 +1122,13 @@ var xmlManager=function(server){
                                 }
                                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
                             }
+
+                            //记录操作行为
+                            if(transition_change){
+                                var operation_order='7'; //操作指令
+                                var detail_desc= "Changed translation information about the route "+ filename;
+                                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,filename);
+                            }
                         }
 
                         event_poll.execTrans(sqlParamsEntity, function(err, info){
@@ -1268,6 +1291,11 @@ var xmlManager=function(server){
                                             VALUES('${xml_id}','${route_name}','${new_route_name}','${xml_id}','',${station_num},${language_num},
                                             '${languages_arr_str}','${all_routes}')`;
                                         sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql1));
+
+                                        //记录操作行为
+                                        var operation_order='2'; //操作指令
+                                        var detail_desc= "Created a merge route named "+route_name;   //详细描述
+                                        sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,route_name);
 
                                         event_poll.execTrans(sqlParamsEntity,function(err,info){
                                             if(err){
@@ -1665,6 +1693,10 @@ var xmlManager=function(server){
                     }
                 }
                 sqlParamsEntity.push(event_poll._getNewSqlParamEntity(sql3));
+                //记录操作行为
+                var operation_order='8'; //操作指令
+                var detail_desc= "Cloned a route named "+filename;
+                sqlParamsEntity =common_funs.operation_history(req,operation_order,sqlParamsEntity,detail_desc,filename);
                 event_poll.execTrans(sqlParamsEntity, (err, info)=>{
                     if(err){
                         //console.log('事务处理失败');

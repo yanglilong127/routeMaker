@@ -15,6 +15,7 @@ module.exports={
 		routemaker:path.join(__dirname,'web/src/js/routemaker.js'),
 		routedrive:path.join(__dirname,'web/src/js/routedrive.js'),
 		companyStation:path.join(__dirname,'web/src/js/companyStation.js'),
+		operationHistory:path.join(__dirname,'web/src/js/operation_history.js'),
 		//分页插件
 		pagination:path.join(__dirname,'web/src/libs/js/jquery.pagination.min.js'),
 		bootstrapjs:path.join(__dirname,'web/src/libs/js/bootstrap.min.js'),
@@ -197,6 +198,23 @@ module.exports={
 			chunks:['common_jq','jq_validate','register'],
 			chunksSortMode: function (chunk1, chunk2) {
 				var order = ['common_jq','jq_validate','register'];
+				var order1 = order.indexOf(chunk1.names[0]);
+				var order2 = order.indexOf(chunk2.names[0]);
+				return order1 - order2;  
+			}
+		}),
+		//操作历史记录页面
+		new HtmlWebpackPlugin({
+			minify: {
+				removeAttributeQuotes:true, //取出属性引号
+				removeComments:true  //去除注释
+			},
+			filename:'html/operationHistory.html',
+			template:path.join(__dirname,'web/src/html/operation_history.html'),
+			inject:true,
+			chunks:['common_jq','pagination','operationHistory'],
+			chunksSortMode: function (chunk1, chunk2) {
+				var order = ['common_jq','pagination','operationHistory'];
 				var order1 = order.indexOf(chunk1.names[0]);
 				var order2 = order.indexOf(chunk2.names[0]);
 				return order1 - order2;  

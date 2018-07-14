@@ -342,14 +342,37 @@ var countries = {
 
 var server_ip = 'www.burtyang.top:55566'; //服务区地址
 
+//操作指令对应表
+var operation_command = {
+    "1": "Create New Route",
+    "2": "Create Merge Route",
+    "3": "Rename Route",
+    "4": "Change Description",
+    "5": "Add Language",
+    "6": "Subside Language",
+    "7": "Change Stops Translation",
+    "8": "Clone Route",
+    "9": "Download XML File",
+    "10": "Delete Route",
+    "11": "Add Company Stop",
+    "12": "Add Route Stop",
+    "13": "Delete Route Stop",
+    "14": "Sortable Route Stop",
+    "15": "Save Stop Information",
+    "16": "Change Stop Information",
+    "17": "Delete Company Stop"
+};
+
 module.exports = {
     login_url: login_url,
     countries: countries,
-    server_ip: server_ip
+    server_ip: server_ip,
+    operation_command: operation_command
 };
 
 /***/ }),
-/* 8 */
+/* 8 */,
+/* 9 */
 /***/ (function(module, exports) {
 
 var g;
@@ -376,7 +399,6 @@ module.exports = g;
 
 
 /***/ }),
-/* 9 */,
 /* 10 */,
 /* 11 */,
 /* 12 */,
@@ -1656,7 +1678,7 @@ var freeGlobal = typeof global == 'object' && global && global.Object === Object
 
 module.exports = freeGlobal;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ }),
 /* 109 */
@@ -4272,7 +4294,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
                          (typeof global !== "undefined" && global.clearImmediate) ||
                          (this && this.clearImmediate);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ }),
 /* 169 */
@@ -4465,7 +4487,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(42)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9), __webpack_require__(42)))
 
 /***/ }),
 /* 170 */

@@ -219,6 +219,8 @@ function Company_station(){
             var origin_station_id=Number($(this).parent().parent().attr('station_id'));//原始的station_id
             var city_name = $(this).parent().siblings('td.station_city').text();  //城市名
             city_name = city_name.split(',').length>1 ? city_name.split(',')[1]: city_name;
+            var route_name = $('.box1 .home span.route_name').text();  //路线名
+            var station_name = $(this).parent().siblings('td.station_name').text();  //站点名
             var station_id;  
             for(var i=0; i<window.company_markers.length; i++){
                 var li_station_id=company_markers[i].origin_station_id;
@@ -253,7 +255,9 @@ function Company_station(){
                     data:{
                         route_id,
                         station_id:origin_station_id,
-                        station_ctime
+                        station_ctime,
+                        station_name,
+                        route_name
                     },
                     success:function(res){
                         $('#zhezhao').fadeOut(1);
@@ -397,11 +401,13 @@ function Company_station(){
     this.add_station_req= function(marker,station_name,addr_content,ret_data,city_name){
         $('#zhezhao').fadeIn(1);   
         var that = this;
+        var route_name = $('.box1 .home span.route_name').text();  //路线名
         $.ajax({
             url:'/myroute/add_station',
             type:'post',
             data:{
                 xml_id: route_id,
+                route_name,
                 ctime:new Date().getTime(),
                 station_id:ret_data.station_id,
                 stations_name:htmlspecialchars(station_name),

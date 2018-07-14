@@ -59,6 +59,7 @@
     "End" : "尾页",
     "Generator" : "产生xml",
     "CompanyStationManage" : "公司站点管理",
+    "OperationHistory":"操作历史",
     "Transition_undone": "翻译不完整",
     "Complete_translation" : "临时保存成功，但是翻译填写不完整。",
     "modify_transition_tip" : "修改站点翻译会使所有用到该站点的路线或者合并路线都改变",
@@ -118,5 +119,14 @@
     "Delete_success": "删除成功！",
 
     "Simulated_drive_err": "站点数至少为1，并且语言数至少为2",
-    "Simulated_CN": "请添加完善中文语言信息"
+    "Simulated_CN": "请添加完善中文语言信息",
+
+    "------------------------" : "----------Operation history页面的翻译----------",
+    "User": "用户",
+    "Apply": "显示",
+    "Date_range": "日期范围",
+    "Company": "公司",
+    "Enter_search_content": "输入搜索内容",
+    "Login_staus_invalid": "登录状态无效",
+    "Time": "时间"
 }

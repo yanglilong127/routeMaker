@@ -22,7 +22,7 @@ function search_place(latlng,language='EN'){
                 type:'get',
                 dataType:'json',
                 success:function(res){
-                    //$('#zhezhao').fadeOut(1);
+                    $('#zhezhao').fadeOut(1);
                     if(res.status=='OK'){
                         var results=res.results[0].address_components;  //返回的数组结果
                         var result_len = results.length; 
@@ -63,7 +63,7 @@ function search_latlng(place,language='EN'){
                 type:'get',
                 dataType:'json',
                 success:function(res){
-                    //$('#zhezhao').fadeOut(1);
+                    $('#zhezhao').fadeOut(1);
                     if(res.status=='OK'){
                         var results=res.results;  //返回的数组结果
                         for(var i=0; i<results.length; i++){

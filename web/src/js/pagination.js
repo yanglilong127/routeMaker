@@ -370,6 +370,7 @@ var delt_event=function(){
         var $description_ele = $('#show_detail .my_inp textarea.xml_description');
         $description_ele.fadeIn(1).val(description).css({'height':'0'}).height($description_ele.get(0).scrollHeight);
         var xml_id=$(this).parent().parent().attr('xml_id');  //xml对应的id
+        var route_name=$(this).parent().siblings('th.filename').find('span').text();
         //点击确定按钮提交更改
         $('#show_detail .my_btn button.confirm').unbind('click');
         $('#show_detail .my_btn button.confirm').bind('click',function(e){
@@ -385,7 +386,8 @@ var delt_event=function(){
                     type:'post',
                     data:{
                         description:htmlspecialchars(change_description),
-                        xml_id
+                        xml_id,
+                        route_name
                     },
                     success:function(res,status){
                         if(res.msg=='err'){
@@ -1032,6 +1034,7 @@ function request_delete_language(jianchen){
     $('#myModal .modal-footer button.confirm').unbind('click');
     $('#myModal .modal-footer button.confirm').bind('click',function(e){
         //$chosen_i.removeClass('route_icon-xuanzhong'); //删除选中样式
+        var route_name=$('#language_table tbody tr:eq(0) th:eq(1)').text(); //路线名称
         $('#myModal').modal('hide');  //隐藏模态框
         var language_len=$('#choose_language .language_box ul.chosen li.language').length;
         $.ajax({
@@ -1041,7 +1044,7 @@ function request_delete_language(jianchen){
                 xml_id,
                 jianchen,
                 stations,
-                xml_id,
+                route_name,
                 language_num:language_len-1, //语言数目
                 languages_arr:languages_arr.join(',')
             },

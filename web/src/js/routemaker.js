@@ -211,12 +211,14 @@ $('.box1 .home button.confirm').click(function(e){
     };
     //更新数据，保存
     $('#zhezhao').fadeIn(1);
+    var route_name= $('.box1 .home span.route_name').text(); //路线名称
     $.ajax({
         url : '/myroute/save_update_data',
         type:'post',
         data:{
             xml_id,
-            send_data
+            send_data,
+            route_name
         },
         success:function(res){
             $('#zhezhao').fadeOut(1);

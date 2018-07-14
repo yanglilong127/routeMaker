@@ -24,9 +24,17 @@ login_out();  //登出按钮操作
 
 window.all_routes=[];  //合并路线时，所有添加的路线route_id集合
 window.merge_routes_languages=[];  //合并路线时，所选语言的集合
-//公司站点管理页面跳转地址
-var company_station_url = window.location.href.replace('index.html','html/companyStation.html');
-$('.outerbox button.go_company a.go_company').attr('href',company_station_url);    
+//公司站点管理页面跳转地址和历史操作记录跳转
+$('.outerbox button.go_company a.go_company,.outerbox button.go_history a.go_history').click(function(e){
+    e.stopPropagation();
+    if($(this).hasClass('go_company')){  //点击的跳转公司
+        var company_station_url = window.location.href.replace('index.html','html/companyStation.html');
+        $(this).attr('href',company_station_url);
+    }else{
+        var history_url = window.location.href.replace('index.html','html/operationHistory.html');
+        $(this).attr('href',history_url);
+    } 
+});
 
 //点击新建按钮
 $('#getData p.info_tip button.new_route').click(function(e){
@@ -191,6 +199,7 @@ function language_event(){
         //$chosen_i.toggleClass('route_icon-xuanzhong'); //添加选中样式
         //Route info 添加语言
         var xml_id=$('#route_info').attr('xml_id');
+        var route_name=$('#language_table tbody tr:eq(0) th:eq(1)').text(); //路线名称
         var $stations_tb=$('#language_table tbody tr');
         var stations=[];
         for(var i=1; i<$stations_tb.length; i++){
@@ -207,7 +216,7 @@ function language_event(){
                     xml_id,
                     jianchen,
                     stations,
-                    xml_id,
+                    route_name,
                     language_num:language_len+1 //语言数目
                 },
                 success:function(res){

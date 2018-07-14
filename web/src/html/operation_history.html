@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Operation History</title>
+    <link rel="shortcut icon" type="image/x-icon"  href="../favicon.ico"/>
+</head>
+<body>
+    <div class="box1">
+        <!--导航条-->
+        <div id="navigation">
+            <div id="logo">
+                <img src="/myroute/images/logo.png" alt="微盟电子">
+            </div>
+            <div class="login_status">
+                <a href="#">
+                    <span class="username"></span>
+                    <i class="icon route_iconfont route_icon-shang"></i>
+                </a>
+                <ul>
+                    <li class="login_out" data-i18n='login_out'></li>
+                </ul>
+            </div>
+            <div class="language_setting">
+                <a href="#">
+                    <span class="language" data-i18n='English' shortname='EN'></span>
+                    <i class="icon route_iconfont route_icon-shang"></i>
+                </a>
+                <ul>
+                    <li data-i18n='English' val='en_US' shortname='EN'></li>
+                    <li data-i18n='simplified_chinese' val='zh_CN' shortname='CN'></li>
+                    <li data-i18n='traditional_chinese' val='zh_TW' shortname='CN'></li>
+                </ul>
+            </div>
+        </div>
+        <div class="home">
+            <button class="btn btn-sm btn-primary go_back" data-i18n='home'></button>
+        </div>
+
+        <div class="fun_fullcontain">
+            <div class="search_zone alert alert-success">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td><label data-i18n='Date_range'></label></td>
+                            <td class="route_name"><label data-i18n='Route_name'></label></td>
+                            <td class="username"><label data-i18n='User'></label></td>
+                            <td><label data-i18n='Operation'></label></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="input-daterange">
+                                    <input type="text" class="input-small form-control" name="day_start" id="user_start_date" readonly="readonly">
+                                    <span class="add-on" data-i18n='To'></span>
+                                    <input type="text" class="input-small form-control" name="day_end" id="user_stop_date" readonly="readonly">
+                                </div>
+                            </td>
+                            <td class="route_name">
+                                <input type="text" class="form-control" name="route_filter" id="route_filter">
+                            </td>
+                            <td class="username">
+                                <input type="text" class="form-control" name="operation_filter" id="user_filter">
+                            </td>
+                            <td>
+                                <select id="oped_oper_sel" class="cmp_filter_sel input-small form-control">
+                                    <option value="0">All</option>
+                                </select>
+                            </td>
+                            <td><div id="user_apply_btn" class="btn btn-success" data-i18n='Apply'></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div id="input_filter">
+                    <form onsubmit="return false"><!--阻止表单提交-->
+                        <i class="icon route_iconfont route_icon-sousuo search_icon"></i>
+                        <input type="text" class="form-control inp_filter" data-i18n='Enter_search_content'>
+                        <i class="icon route_iconfont route_icon-chuyidong delete_icon"></i>
+                    </form>
+                </div>
+            </div>
+            <!--search result zone-->
+            <div class="result_zone">
+                <table id="user_operation_grid" class="table table-bordered table-hover">
+                    <thead>
+                        <tr role="row">
+                            <th class="sorting operation" data-i18n='Route_name'></th>
+                            <th class="sorting operation" data-i18n='Operation'></th>
+                            <th class="sorting description" data-i18n='Description'></th>
+                            <th class="sorting_asc time" data-i18n='Time'></th>
+                            <th class="sorting user" data-i18n='User'></th>
+                            <th class="sorting ip">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- <tr>
+                            <td class="route_name"></td>
+                            <td class="operation">Set vehicle type to vehicle</td>
+                            <td class="description">供电方式发到</td>
+                            <td class="time">2018-05-31 10:35:59</td>
+                            <td class="user">SWIan</td>
+                            <td class="company">FUNTORO</td>
+                            <td class="ip">211.21.153.61</td>
+                        </tr> -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="6" data-i18n='NoData' style="text-align:center;"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <!--page-->
+                <div class="row-fluid" id="data_page_infor">
+                    <div class="col-lg-6">
+                        <div class="dataTables_info" id="user_operation_grid_info">
+                            <span data-i18n='Show'></span> <span class="from_num">0</span>
+                            <span data-i18n='To'></span> <span class="to_num">0</span>
+                            <span data-i18n='Of'></span> <span class="total">0</span> 
+                            <span data-i18n='Entries'></span>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <!--分页操作-->
+                        <div class="pagination" id="my_pagination">
+                            
+                        </div>
+                    </div>
+                </div>
+                <!--显示数据条数-->
+                <div class="pagination" id="filter_data_num">
+                    <span data-i18n='numbers'></span>
+                    <span class="nums"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="box2">
+        <!--保存成功提示信息-->
+        <div id="save_success">
+            <p class="save_tip"></p>
+        </div>
+        <!--遮罩层-->
+        <div id="zhezhao">
+            <p></p>
+            <div class="sk-cube-grid">
+            <div class="sk-cube sk-cube1"></div>
+            <div class="sk-cube sk-cube2"></div>
+            <div class="sk-cube sk-cube3"></div>
+            <div class="sk-cube sk-cube4"></div>
+            <div class="sk-cube sk-cube5"></div>
+            <div class="sk-cube sk-cube6"></div>
+            <div class="sk-cube sk-cube7"></div>
+            <div class="sk-cube sk-cube8"></div>
+            <div class="sk-cube sk-cube9"></div>  
+            </div> 
+        </div>
+    </div>
+    
+</body>
+</html>

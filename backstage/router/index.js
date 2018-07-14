@@ -11,12 +11,18 @@ const my_stationManager=require('./stations_manage');
 //公司站点统一管理
 const my_companyStationManager=require('./company_station_manager');
 const my_login_registry=require('./login_out_registry');
+//获取公司历史操作记录
+const my_company_operation_history=require('./select_operation_history');
 
 
 var myrouter=function(server){
     server.use((req,res,next)=>{
         req.session._garbage=Date.now();  //更新session过期时间
         next();
+    });
+
+    server.get('/',(req,res)=>{
+        res.render('login.html');
     });
 
     //登录验证
@@ -32,6 +38,9 @@ var myrouter=function(server){
     my_companyStationManager.station_manage(server);
 
     my_login_registry.login_registry(server);
+
+    //获取公司历史操作记录
+    my_company_operation_history.historyOperation(server);
 
 };
 

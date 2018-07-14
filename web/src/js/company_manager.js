@@ -178,12 +178,14 @@ function Company_station(){
             var station_id = $(this).parent().parent().attr('station_id'); //station_id
             var _this=$(this);
             var chosen_marker_index = Number($(this).parent().siblings('td.index').text());  //系列号
+            var station_name= $(this).parent().siblings('td.station_name').text();//站点名称
             $('#company_stations tbody tr.company_station').eq(chosen_marker_index-1).trigger('click');
             $.ajax({
                 url:'/myroute/company_manage_used_for',
                 type:'post',
                 data:{
                     station_id: station_id,
+                    route_name
                 },
                 success:function(res){
                     if(res.msg=='err'){
@@ -682,13 +684,15 @@ function marker_drag_ev(marker){
                 }
             }
             //修改公司站点的station_id、经纬度
+            var station_name = this.station_name; //站点名称
             $.ajax({
                 url : '/myroute/company_manage_drag_station',
                 type: 'post',
                 data :{
                     origin_station_id :station_id,
                     station_id:ret_data.station_id,
-                    latLng : ret_data.latLng
+                    latLng : ret_data.latLng,
+                    station_name
                 },
                 success:function(res){
                     if(res.msg==='err'){
