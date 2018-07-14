@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50617
 File Encoding         : 65001
 
-Date: 2018-06-26 21:00:51
+Date: 2018-07-14 20:56:24
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -50,7 +50,7 @@ CREATE TABLE `user_table` (
   `sessionID` char(32) DEFAULT NULL,
   `languages` varchar(1000) NOT NULL DEFAULT 'en.US' COMMENT '该公司所选择的语言列表',
   PRIMARY KEY (`id`,`sz`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of user_table

@@ -11528,7 +11528,7 @@ function Company_station() {
         if (!route_id) {
             return;
         }
-        $('#zhezhao').fadeIn(1);
+        if ($('#zhezhao').css('display') != 'block') $('#zhezhao').fadeIn(1);
         return new Promise(function (resolve, reject) {
             $.ajax({
                 url: '/myroute/get_company_stations',
@@ -11556,7 +11556,7 @@ function Company_station() {
                             that.sort_company_markers(getData);
                         }
                         resolve(getData);
-                        $('#zhezhao').fadeOut(1);
+                        //$('#zhezhao').fadeOut(1);
                     } else if (res.msg == 'err' || res.msg == 'no') {
                         window.location = _setting.login_url; //跳转
                     }
@@ -12057,7 +12057,9 @@ function sortable_chosen_station(xml_id) {
     /* if(send_data.stations.length <2){  //一个以上才需要排序
         return;
     } */
-    $('#zhezhao').fadeIn(1);
+    if ($('#zhezhao').css('display') != 'black') {
+        $('#zhezhao').fadeIn(1);
+    }
     //请求更新排序
     $.ajax({
         url: '/myroute/sortable_station',
